@@ -30,6 +30,7 @@ function registerScreen({ navigation }) {
 
       <View
         style={{
+          marginTop: 50,
           marginLeft: 30,
           marginRight: 30,
           marginBottom: 15,
@@ -51,7 +52,7 @@ function registerScreen({ navigation }) {
             backgroundColor: '#00000018',
             borderWidth: 3,
             borderRadius: 10,
-            borderColor: '#0080ff',
+            borderColor: '#263466',
             fontWeight: 500
           }}
           value={email}
@@ -82,7 +83,7 @@ function registerScreen({ navigation }) {
             backgroundColor: '#00000018',
             borderWidth: 3,
             borderRadius: 10,
-            borderColor: '#0080ff',
+            borderColor: '#263466',
             fontWeight: 500
           }}
           value={senha}
@@ -94,13 +95,13 @@ function registerScreen({ navigation }) {
         style={{
           cursor: 'pointer',
           marginTop: 15,
-          marginLeft: 110,
-          marginRight: 110,
+          marginLeft: 30,
+          marginRight: 30,
           marginBottom: 10,
         }}>
         <TouchableOpacity
           style={{
-            backgroundColor: '#0080ff',
+            backgroundColor: '#263466',
             borderRadius: 10,
             padding: 10
           }}

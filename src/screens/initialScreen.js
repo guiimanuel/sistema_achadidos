@@ -1,217 +1,219 @@
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { Text, TouchableOpacity, View, FlatList, TextInput, Image, onChangeText } from 'react-native';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import Fontisto from '@expo/vector-icons/Fontisto';
+import React, { useState, useEffect } from 'react';
+import { Text, TouchableOpacity, View, Image, ActivityIndicator } from 'react-native';
+import api from '../services/api';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { MaterialIcons } from '@expo/vector-icons';
-//#
 
 function initialScreen({ navigation }) {
+    const fontePlayfairBold = { fontFamily: 'PlayfairDisplay-Bold' };
+
+    const [cotacoes, setCotacoes] = useState({
+        usd: { valor: 'R$ 0,00', variacao: 0 },
+        eur: { valor: 'R$ 0,00', variacao: 0 },
+        mxn: { valor: 'R$ 0,00', variacao: 0 }
+    });
+    const [lastUpdate, setLastUpdate] = useState('--:--');
+    const [loading, setLoading] = useState(false);
+
+    function formatBrl(value) {
+        const numberValue = Number(value);
+        if (Number.isNaN(numberValue)) {
+            return 'R$ --';
+        }
+        return numberValue.toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+    }
+
+    function formatTime(value) {
+        if (!value) {
+            return '--:--';
+        }
+        const parsedDate = new Date(value.replace(' ', 'T'));
+        if (Number.isNaN(parsedDate.getTime())) {
+            return '--:--';
+        }
+        return parsedDate.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function formatVariation(value) {
+        const numberValue = Number(value);
+
+        if (Number.isNaN(numberValue)) {
+            return '0,00%';
+        }
+
+        const absoluteFormatted = Math.abs(numberValue).toLocaleString('pt-BR', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+
+        if (numberValue > 0) {
+            return <Text style={{ color: 'green', fontSize: 15 }}>+{absoluteFormatted}%</Text>;
+        }
+
+        if (numberValue < 0) {
+            return <Text style={{ color: 'red', fontSize: 15 }}>-{absoluteFormatted}%</Text>;
+        }
+
+        return '0,00%';
+    }
+
+    function getVariationColor(value) {
+        const numberValue = Number(value);
+
+        if (numberValue > 0) {
+            return '#2e7d32';
+        }
+
+        if (numberValue < 0) {
+            return '#c62828';
+        }
+
+        return '#6b7280';
+    }
+
+    function getVariationIcon(value) {
+        const numberValue = Number(value);
+        if (numberValue > 0) {
+            return <AntDesign name="caret-up" size={20} color="green" />;
+        }
+        if (numberValue < 0) {
+            return <AntDesign name="caret-down" size={20} color="red" />;
+        }
+        return <AntDesign name="minus" size={20} color="black" />;
+    }
+
+    async function atualizaCotacoes() {
+        try {
+            setLoading(true);
+            const response = await api.get('/last/USD-BRL,EUR-BRL,MXN-BRL');
+            const { USDBRL, EURBRL, MXNBRL } = response.data;
+            setCotacoes({
+                usd: { valor: formatBrl(USDBRL?.bid), variacao: Number(USDBRL?.pctChange ?? 0) },
+                eur: { valor: formatBrl(EURBRL?.bid), variacao: Number(EURBRL?.pctChange ?? 0) },
+                mxn: { valor: formatBrl(MXNBRL?.bid), variacao: Number(MXNBRL?.pctChange ?? 0) }
+            });
+            setLastUpdate(
+                new Date().toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+            );
+        } catch (error) {
+            console.log('Erro ao atualizar cotações:', error);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
+        atualizaCotacoes();
+    }, []);
+
     return (
-        <View style={{ height: '100%', backgroundColor: '#fffff' }}>
-            <StatusBar barStyle='light-content' />
-
-            {/* Header*/}
-            <View style={{ backgroundColor: '#5B6EFF', width: '100%', height: 250, borderRadius: 28, alignItems: 'flex-start', padding: 20 }}>
-                <View style={{ flexDirection: 'row', marginTop: 50 }}>
-
-                </View>
-                <View style={{ height: 50, width: '100%', borderRadius: 10, backgroundColor: 'white', flexDirection: 'row', alignItems: 'center', marginTop: 20, paddingHorizontal: 10 }}>
-                    
-                </View>
-            </View>
-
-            {/*Main*/}
-            <View style={{ justifyContent: 'flex-end', marginTop: 30 }}>
-                <View style={{
-                    alignItems: 'flex-start', flexDirection: 'row', width: '100%', paddingBottom: 5,
-                    paddingLeft: 25
-                }}>
-                    <Text style={{ fontSize: 18, fontWeight: '600' }}>Categorias</Text>
-
-                    <View style={{ width: 300, alignItems: 'flex-end' }}>
-                        <Text style={{ fontSize: 18, fontWeight: '600' }}>Mostrar Tudo</Text>
-                    </View>
-
+        <View style={{ flex: 1, height: '100%', width: '100%', backgroundColor: '#ffffff', alignItems: 'center' }}> {/* Container Principal */}
+            {/* header blue */}
+            <View style={{ backgroundColor: '#263466', height: 180, width: '100%', borderBottomRightRadius: 30, borderBottomLeftRadius: 30, alignItems: 'center' }}>
+                {/* Header titulo */}
+                <View style={{ width: '100%', marginTop: 40, alignItems: 'center' }}>
+                    <Text style={[{ color: '#ffffff', fontSize: 34, textAlign: 'center', lineHeight: 34 }, fontePlayfairBold]}>Conversor de</Text>
+                    <Text style={[{ color: '#ffffff', fontSize: 34, textAlign: 'center', lineHeight: 34 }, fontePlayfairBold]}>
+                        Moedas <Text style={[{ color: '#ff8c00' }, fontePlayfairBold]}>Pro</Text>
+                    </Text>
                 </View>
 
-                {/*cards 01*/}
-                <View style={{ width: '100%', height: 120, flexDirection: 'row' }}>
-
-                    {/*01*/}
-                    <View style={{
-                        backgroundColor: 'white', margin: 10, marginTop: 5, width: 110, height: 100, marginRight: 20,
-                        marginLeft: 25, borderRadius: 10, gap: 11
-                    }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 15 }}>
-                            <FontAwesome5 name="hospital-user" size={40} color='#5B6EFF' />
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', color: '#5e5e5e' }}>Consultas</Text>
-                        </View>
-                    </View>
-
-                    {/*02*/}
-                    <View style={{ backgroundColor: 'white', margin: 10, marginTop: 5, width: 110, height: 100, borderRadius: 10, gap: 11 }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 15 }}>
-                            <FontAwesome5 name="tooth" size={40} color='#5B6EFF' />
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', color: '#5e5e5e' }}>Dentista</Text>
-                        </View>
-                    </View>
-
-                    {/*03*/}
-                    <View style={{
-                        backgroundColor: 'white', margin: 10, marginTop: 5, width: 110, height: 100, marginLeft: 20,
-                        borderRadius: 10, gap: 11
-                    }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 15 }}>
-                            <FontAwesome name="heartbeat" size={40} color='#5B6EFF' />
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', fontSize: 14, color: '#5e5e5e' }}>Cardiologista</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/*cards 02*/}
-                <View style={{ width: '100%', height: 120, flexDirection: 'row' }}>
-
-                    {/*01*/}
-                    <View style={{
-                        backgroundColor: 'white', margin: 10, marginTop: 5, width: 110, height: 100, marginRight: 20,
-                        marginLeft: 25, borderRadius: 10, gap: 11
-                    }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 15 }}>
-                            <FontAwesome5 name="hospital" size={40} color='#5B6EFF' />
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', color: '#5e5e5e' }}>Hospital</Text>
-                        </View>
-                    </View>
-
-                    {/*02*/}
-                    <View style={{ backgroundColor: 'white', margin: 10, marginTop: 5, width: 110, height: 100, borderRadius: 10, gap: 11 }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 15 }}>
-                            <MaterialCommunityIcons name="car-emergency" size={40} color='#5B6EFF' />
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', color: '#5e5e5e' }}>Emergência</Text>
-                        </View>
-                    </View>
-
-                    {/*03*/}
-                    <View style={{
-                        backgroundColor: 'white', margin: 10, marginTop: 5, width: 110, height: 100, marginLeft: 20,
-                        borderRadius: 10, gap: 11
-                    }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', marginTop: 15 }}>
-                            <Fontisto name="laboratory" size={40} color='#5B6EFF' />
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', fontSize: 14, color: '#5e5e5e' }}>Laboratório</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* continuacao Main */}
-                <View style={{
-                    alignItems: 'flex-start', paddingLeft: 25, flexDirection: 'row', width: '100%'
-                }}>
-                    <Text style={{ fontSize: 18, fontWeight: '600' }}>Melhores doutores</Text>
-                </View>
-
-
-                <View style={{ width: '100%', height: 260, paddingLeft: 25, alignItems: 'flex-start' }}>
-
-                    <View style={{
-                        width: 392, height: 100, backgroundColor: 'white', flexDirection: 'row', alignItems: 'center',
-                        marginTop: 5, borderRadius: 8
-                    }}>
-                        <Image
-                            source={require('../../assets/images/fotodeEmanuel.jpeg')}
-                            style={{ width: 70, height: 70, borderRadius: 50, marginLeft: 15 }} />
-
-                        <View style={{ marginLeft: 15 }}>
-                            <Text style={{ fontWeight: '600' }}>Dr. Emanuel Roberto</Text>
-                            <Text style={{ fontWeight: '100' }}>Médico - Psicoterapia</Text>
-                            <View style={{ flexDirection: 'row' }}>
-                                <MaterialCommunityIcons name="star" size={19} color="#ffdd00" />
-                                <Text style={{ color: '#5e5e5e', fontWeight: '600' }}> 4.9 (37 Visualizações)</Text>
-                            </View>
-                        </View>
-
-                    </View>
-
-                    <View style={{
-                        width: 392, height: 100, backgroundColor: 'white', flexDirection: 'row', alignItems: 'center',
-                        marginTop: 15, borderRadius: 8
-                    }}>
-                        <Image
-                            source={require('../../assets/images/fotodefilipe.jpeg')}
-                            style={{ width: 70, height: 70, borderRadius: 50, marginLeft: 15 }} />
-
-                        <View style={{ marginLeft: 15 }}>
-                            <Text style={{ fontWeight: '600' }}>Dr. Filipe Moura</Text>
-                            <Text>Médico - Medicina Interna</Text>
-                            <View style={{ flexDirection: 'row' }}>
-                                <MaterialCommunityIcons name="star" size={19} color="#ffdd00" />
-                                <Text style={{ color: '#5e5e5e', fontWeight: '500' }}> 4.9 (37 Visualizações)</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                </View>
-
-                {/* footer */}
-                <View style={{ backgroundColor: '#5B6EFF', width: '100%', height: 300, flexDirection: 'row' }}>
-
-                    <View style={{ width: 100, height: 90, marginTop: 13, marginLeft: 15, gap: 11 }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 10 }}>
-                            <AntDesign name="home" size={40} color="white" />
-
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', color: 'white' }}>Home</Text>
-                        </View>
-                    </View>
-
-                    <View style={{ width: 100, height: 90, marginTop: 13, gap: 11 }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 10 }}>
-                            <FontAwesome6 name="user-doctor" size={40} color="white" />
-
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', color: 'white' }}>Doutores</Text>
-                        </View>
-                    </View>
-
-                    <View style={{ width: 100, height: 90, marginTop: 13, gap: 11 }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 11 }}>
-                            <FontAwesome name="calendar" size={40} color="white" />
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', color: 'white' }}>Agendamento</Text>
-                        </View>
-                    </View>
-
-                    <View style={{ width: 100, height: 90, marginTop: 13, gap: 11 }}>
-                        <View style={{ alignItems: 'center', justifyContent: 'center', paddingTop: 10 }}>
-                            <AntDesign name="profile" size={40} color="white" />
-                        </View>
-                        <View style={{ alignItems: 'center', justifyContent: 'flex-end' }}>
-                            <Text style={{ fontWeight: '600', color: 'white' }}>Perfil</Text>
-                        </View>
-                    </View>
-
+                {/* Cotacao atual / card 01 */}
+                <View style={{ backgroundColor: '#ffffff', width: 340, height: 80, marginTop: 25, borderRadius: 15, justifyContent: 'center', alignItems: 'center', shadowRadius: 8 }}>
+                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Cotação Atual</Text>
+                    <Text style={{ fontSize: 15 }}>Ultima Atualização: {lastUpdate}</Text>
                 </View>
 
             </View>
+
+            {/* USD/BRL Card 02 */}
+            <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, marginTop: 60, shadowRadius: 8 }}>
+                <View style={{ height: 40, width: 40, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
+                    <Image source={require('../../assets/images/us.png')} style={{ width: '100%', height: '100%' }} />
+                </View>
+                <View style={{ height: 40, width: 40, borderRadius: 20, marginLeft: 30, overflow: 'hidden' }}>
+                    <Image source={require('../../assets/images/br.png')} style={{ width: '100%', height: '100%' }} />
+                </View>
+                <View style={{ position: 'absolute', left: 83, top: 18 }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 20 }}>USD/BRL</Text>
+                    <Text style={{ fontSize: 15 }}>1 Dólar americano</Text>
+                </View>
+                <View style={{ position: 'absolute', right: 12, top: 18 }}>
+                    <Text style={{ alignItems: 'flex-end', fontSize: 18, fontWeight: 'bold' }}>{cotacoes.usd.valor}</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 2 }}>
+                        <Text style={{ color: getVariationColor(cotacoes.usd.variacao), fontSize: 13, fontWeight: 'bold', marginRight: 4 }}>{getVariationIcon(cotacoes.usd.variacao)}</Text>
+                        <Text style={{ color: getVariationColor(cotacoes.usd.variacao), fontSize: 13, fontWeight: 'bold' }}>{formatVariation(cotacoes.usd.variacao)}</Text>
+                    </View>
+                </View>
+            </View>
+
+            {/* EUR/BRL Card 03 */}
+            <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, shadowRadius: 8, marginTop: 11 }}>
+                <View style={{ height: 40, width: 40, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
+                    <Image source={require('../../assets/images/eu.png')} style={{ width: '100%', height: '100%' }} />
+                </View>
+                <View style={{ height: 40, width: 40, borderRadius: 20, marginLeft: 30, overflow: 'hidden' }}>
+                    <Image source={require('../../assets/images/br.png')} style={{ width: '100%', height: '100%' }} />
+                </View>
+                <View style={{ position: 'absolute', left: 83, top: 18 }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 20 }}>EUR/BRL</Text>
+                    <Text style={{ fontSize: 15 }}>1 Euro</Text>
+                </View>
+                <View style={{ position: 'absolute', right: 12, top: 18 }}>
+                    <Text style={{ alignItems: 'flex-end', fontSize: 18, fontWeight: 'bold' }}>{cotacoes.eur.valor}</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 2 }}>
+                        <Text style={{ color: getVariationColor(cotacoes.eur.variacao), fontSize: 13, fontWeight: 'bold', marginRight: 4 }}>{getVariationIcon(cotacoes.eur.variacao)}</Text>
+                        <Text style={{ color: getVariationColor(cotacoes.eur.variacao), fontSize: 13, fontWeight: 'bold' }}>{formatVariation(cotacoes.eur.variacao)}</Text>
+                    </View>
+                </View>
+            </View>
+
+            {/* MXN/BRL Card 04 */}
+            <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, shadowRadius: 8, marginTop: 11 }}>
+                <View style={{ height: 40, width: 40, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
+                    <Image source={require('../../assets/images/mxn.png')} style={{ width: '100%', height: '100%' }} />
+                </View>
+                <View style={{ height: 40, width: 40, borderRadius: 20, marginLeft: 30, overflow: 'hidden' }}>
+                    <Image source={require('../../assets/images/br.png')} style={{ width: '100%', height: '100%' }} />
+                </View>
+                <View style={{ position: 'absolute', left: 83, top: 18 }}>
+                    <Text style={{ fontWeight: 'bold', fontSize: 20 }}>MXN/BRL</Text>
+                    <Text style={{ fontSize: 15 }}>1 Peso mexicano</Text>
+                </View>
+                <View style={{ position: 'absolute', right: 12, top: 18 }}>
+                    <Text style={{ alignItems: 'flex-end', fontSize: 18, fontWeight: 'bold' }}>{cotacoes.mxn.valor}</Text>
+                    <View style={{ flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center', marginTop: 2 }}>
+                        <Text style={{ color: getVariationColor(cotacoes.mxn.variacao), fontSize: 13, fontWeight: 'bold', marginRight: 4 }}>{getVariationIcon(cotacoes.mxn.variacao)}</Text>
+                        <Text style={{ color: getVariationColor(cotacoes.mxn.variacao), fontSize: 13, fontWeight: 'bold' }}>{formatVariation(cotacoes.mxn.variacao)}</Text>
+                    </View>
+                </View>
+            </View>
+
+            {/* Atualizar Cotações / BUTTON */}
+            <TouchableOpacity
+                style={{ backgroundColor: '#4caf93', width: 340, height: 50, borderRadius: 30, marginTop: 20, alignItems: 'center', justifyContent: 'center', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.4, shadowColor: '#f4a261' }}
+                onPress={atualizaCotacoes}
+                disabled={loading}
+                activeOpacity={0.9}
+            >
+                <View style={{ width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
+                    <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 19 }}>Atualizar Cotações</Text>
+                    {loading ? (
+                        <View style={{ position: 'absolute', right: 18, top: 0, bottom: 0, justifyContent: 'center' }}>
+                            <ActivityIndicator size="small" color="#fff" />
+                        </View>
+                    ) : null}
+                </View>
+            </TouchableOpacity>
 
         </View>
     )

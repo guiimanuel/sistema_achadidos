@@ -32,9 +32,9 @@ function loginScreen({ navigation }) {
             fontWeight: '600',
             textAlign: 'center',
             marginTop: 30,
-            color: '#0080ff'
+            color: '#263466'
           }}>
-          Seja, Bem-Vindo!
+          Seja Bem-Vindo!
         </Text>
       </View>
       {/*Foto perfil*/}
@@ -42,7 +42,7 @@ function loginScreen({ navigation }) {
         style={{
           margin: 'auto',
           marginTop: 50,
-          marginBottom: 70
+          marginBottom: 40
         }}>
         <Image
           style={{
@@ -55,7 +55,7 @@ function loginScreen({ navigation }) {
       </View>
 
 
-      {/*Login*/}
+      {/*Email*/}
       <View
         style={{
           marginLeft: 30,
@@ -81,7 +81,7 @@ function loginScreen({ navigation }) {
             backgroundColor: '#00000018',
             borderWidth: 3,
             borderRadius: 10,
-            borderColor: '#0080ff',
+            borderColor: '#263066',
             fontWeight: 500
           }}
           keyboardType='email-address'
@@ -115,7 +115,7 @@ function loginScreen({ navigation }) {
             backgroundColor: '#00000018',
             borderWidth: 3,
             borderRadius: 10,
-            borderColor: '#0080ff',
+            borderColor: '#263066',
             fontWeight: 500
           }}
           secureTextEntry
@@ -130,13 +130,13 @@ function loginScreen({ navigation }) {
       <View style={{
         cursor: 'pointer',
         marginTop: 15,
-        marginLeft: 110,
-        marginRight: 110,
+        marginLeft: 30,
+        marginRight: 30,
         marginBottom: 10,
       }}>
         <TouchableOpacity
           style={{
-            backgroundColor: '#0080ff',
+            backgroundColor: '#263466',
             borderRadius: 10,
             padding: 10,
           }}
@@ -158,14 +158,14 @@ function loginScreen({ navigation }) {
       <View
         style={{
           cursor: 'pointer',
-          marginLeft: 110,
-          marginRight: 110,
+          marginLeft: 30,
+          marginRight: 30,
           marginBottom: 15,
         }}>
 
         <TouchableOpacity
           style={{
-            backgroundColor: '#0080ff',
+            backgroundColor: '#263466',
             borderRadius: 10,
             padding: 10,
           }}

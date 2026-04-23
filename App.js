@@ -35,27 +35,30 @@ function App() {
           name="login"
           component={loginScreen}
           options={{
-            title: 'Login',
+            title: 'Tela de Login',
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold' },
             headerTintColor: '#ffffff',
-            headerStyle: { backgroundColor: '#0080ff' }
+            headerStyle: { backgroundColor: '#263466' }
           }} />
 
         <Stack.Screen
           name="initial"
           component={initialScreen}
+          options={{
+            headerShown: false
+          }}
         />
 
         <Stack.Screen
           name="register"
           component={registerScreen}
           options={{
-            title: 'Cadastro',
+            title: 'Tela de Cadastro',
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold' },
             headerTintColor: '#ffffff',
-            headerStyle: { backgroundColor: '#0080ff' }
+            headerStyle: { backgroundColor: '#263466' }
           }}
         />
 
