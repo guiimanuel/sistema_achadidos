@@ -4,28 +4,28 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import loginScreen from './src/screens/loginScreen';
-import initialScreen from './src/screens/initialScreen';
-import registerScreen from './src/screens/registerScreen';
+import loginScreen from '../screens/loginScreen';
+import ConvercaoScreen from '../screens/ConvercaoScreen';
+import CadastroScreen from '../screens/CadastroScreen';
 
 const Stack = createNativeStackNavigator();
 
-
 function App() {
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+
   const firebaseConfig = {
-    apiKey: "AIzaSyDJNdnO73hmGPMga5JibbPoJqdQPuhZjxk",
-    authDomain: "logincadfirebase.firebaseapp.com",
-    projectId: "logincadfirebase",
-    storageBucket: "logincadfirebase.firebasestorage.app",
-    messagingSenderId: "45085913810",
-    appId: "1:45085913810:web:f20766ef06aaaffcea730b",
-    measurementId: "G-2Y2VC65EWB"
+    apiKey: "AIzaSyDTDWpgvF0a7NAiazc6lfY6JpbAw7zPIVU",
+    authDomain: "daju-c45eb.firebaseapp.com",
+    projectId: "daju-c45eb",
+    storageBucket: "daju-c45eb.firebasestorage.app",
+    messagingSenderId: "772772570628",
+    appId: "1:772772570628:web:1819a838a06265b2687751",
+    measurementId: "G-6ZNYQ4ZCWZ"
   };
+
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
+
   return (
     <NavigationContainer>
 
@@ -39,26 +39,26 @@ function App() {
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold' },
             headerTintColor: '#ffffff',
-            headerStyle: { backgroundColor: '#263466' }
+            headerStyle: { backgroundColor: '#2F6FDB' }
           }} />
 
         <Stack.Screen
-          name="initial"
-          component={initialScreen}
+          name="Convercao"
+          component={ConvercaoScreen}
           options={{
             headerShown: false
           }}
         />
 
         <Stack.Screen
-          name="register"
-          component={registerScreen}
+          name="Cadastro"
+          component={CadastroScreen}
           options={{
             title: 'Tela de Cadastro',
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold' },
             headerTintColor: '#ffffff',
-            headerStyle: { backgroundColor: '#263466' }
+            headerStyle: { backgroundColor: '#2F6FDB' }
           }}
         />
 

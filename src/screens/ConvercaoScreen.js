@@ -67,11 +67,11 @@ function initialScreen({ navigation }) {
         const numberValue = Number(value);
 
         if (numberValue > 0) {
-            return '#2e7d32';
+            return '#00b309';
         }
 
         if (numberValue < 0) {
-            return '#c62828';
+            return '#b30000';
         }
 
         return '#6b7280';
@@ -116,14 +116,14 @@ function initialScreen({ navigation }) {
     }, []);
 
     return (
-        <View style={{ flex: 1, height: '100%', width: '100%', backgroundColor: '#ffffff', alignItems: 'center' }}> {/* Container Principal */}
+        <View style={{ flex: 1, height: '100%', width: '100%', backgroundColor: '#e6e5e5', alignItems: 'center' }}> {/* Container Principal */}
             {/* header blue */}
-            <View style={{ backgroundColor: '#263466', height: 180, width: '100%', borderBottomRightRadius: 30, borderBottomLeftRadius: 30, alignItems: 'center' }}>
+            <View style={{ backgroundColor: '#2F6FDB', height: 180, width: '100%', borderBottomRightRadius: 100, borderBottomLeftRadius: 100, alignItems: 'center' }}>
                 {/* Header titulo */}
                 <View style={{ width: '100%', marginTop: 40, alignItems: 'center' }}>
                     <Text style={[{ color: '#ffffff', fontSize: 34, textAlign: 'center', lineHeight: 34 }, fontePlayfairBold]}>Conversor de</Text>
                     <Text style={[{ color: '#ffffff', fontSize: 34, textAlign: 'center', lineHeight: 34 }, fontePlayfairBold]}>
-                        Moedas <Text style={[{ color: '#ff8c00' }, fontePlayfairBold]}>Pro</Text>
+                        Moedas <Text style={[{ color: '#de0000' }, fontePlayfairBold]}>Pro</Text>
                     </Text>
                 </View>
 
@@ -136,8 +136,8 @@ function initialScreen({ navigation }) {
             </View>
 
             {/* USD/BRL Card 02 */}
-            <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, marginTop: 60, shadowRadius: 8 }}>
-                <View style={{ height: 40, width: 40, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
+            <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, marginTop: 60,marginBottom: 25, shadowRadius: 8 }}>
+                <View style={{ height: 50, width: 50, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
                     <Image source={require('../../assets/images/us.png')} style={{ width: '100%', height: '100%' }} />
                 </View>
                 <View style={{ height: 40, width: 40, borderRadius: 20, marginLeft: 30, overflow: 'hidden' }}>
@@ -157,8 +157,8 @@ function initialScreen({ navigation }) {
             </View>
 
             {/* EUR/BRL Card 03 */}
-            <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, shadowRadius: 8, marginTop: 11 }}>
-                <View style={{ height: 40, width: 40, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
+            <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, shadowRadius: 8, marginTop: 11,marginBottom: 25  }}>
+                <View style={{ height: 50, width: 50, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
                     <Image source={require('../../assets/images/eu.png')} style={{ width: '100%', height: '100%' }} />
                 </View>
                 <View style={{ height: 40, width: 40, borderRadius: 20, marginLeft: 30, overflow: 'hidden' }}>
@@ -178,8 +178,8 @@ function initialScreen({ navigation }) {
             </View>
 
             {/* MXN/BRL Card 04 */}
-            <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, shadowRadius: 8, marginTop: 11 }}>
-                <View style={{ height: 40, width: 40, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
+            <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, shadowRadius: 8, marginTop: 11, marginBottom: 25 }}>
+                <View style={{ height: 50, width: 50, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
                     <Image source={require('../../assets/images/mxn.png')} style={{ width: '100%', height: '100%' }} />
                 </View>
                 <View style={{ height: 40, width: 40, borderRadius: 20, marginLeft: 30, overflow: 'hidden' }}>
@@ -200,7 +200,7 @@ function initialScreen({ navigation }) {
 
             {/* Atualizar Cotações / BUTTON */}
             <TouchableOpacity
-                style={{ backgroundColor: '#4caf93', width: 340, height: 50, borderRadius: 30, marginTop: 20, alignItems: 'center', justifyContent: 'center', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.4, shadowColor: '#f4a261' }}
+                style={{ backgroundColor: '#2F6FDB', width: 360, height: 60, borderRadius: 30, marginTop: 80, alignItems: 'center', justifyContent: 'center', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.4, shadowColor: '#3a2000' }}
                 onPress={atualizaCotacoes}
                 disabled={loading}
                 activeOpacity={0.9}

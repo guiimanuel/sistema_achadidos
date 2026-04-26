@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, TextInput, TouchableOpacity } from 'react-native';
+import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 
@@ -8,186 +8,109 @@ function loginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const auth = getAuth();
+
   const signInUser = () => {
     signInWithEmailAndPassword(auth, email, senha)
       .then((userCredential) => {
-        // Signed in
         const user = userCredential.user;
-        navigation.navigate('initial', user);
+        navigation.navigate('Convercao', user);
       })
-      .catch((error) => {
-        const errorCode = error.code;
-        const errorMessage = error.message;
+      .catch(() => {
+        alert('Email ou senha inválidos!');
       });
   };
 
   return (
-    <View>
+    <View style={styles.container}>
       <StatusBar style="auto" />
 
-      <View>
-        <Text
-          style={{
-            fontSize: 32,
-            fontWeight: '600',
-            textAlign: 'center',
-            marginTop: 30,
-            color: '#263466'
-          }}>
-          Seja Bem-Vindo!
-        </Text>
-      </View>
-      {/*Foto perfil*/}
-      <View
-        style={{
-          margin: 'auto',
-          marginTop: 50,
-          marginBottom: 40
-        }}>
-        <Image
-          style={{
-            width: 100,
-            height: 100,
-            borderRadius: 50
-          }}
-          source={require('../../assets/images/fotoperfil.png')}
-        />
-      </View>
+      <Text style={styles.title}>Realize seu Login:</Text>
 
+      <Image
+        style={styles.image}
+        source={require('../../assets/images/fotoperfil.png')}
+      />
 
-      {/*Email*/}
-      <View
-        style={{
-          marginLeft: 30,
-          marginRight: 30,
-          marginBottom: 15,
-          alignItems: 'left',
-          gap: 3,
-        }}>
+      <TextInput
+        placeholder="Email"
+        style={styles.input}
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+        placeholderTextColor="#8a8a8a"
 
+      />
 
-        <Text
-          style={{
-            fontSize: 16,
-            textAlign: 'left',
-            fontWeight: '600'
-          }}>
-          Email
-        </Text>
-        <TextInput
-          style={{
-            fontSize: 14,
-            height: 50,
-            backgroundColor: '#00000018',
-            borderWidth: 3,
-            borderRadius: 10,
-            borderColor: '#263066',
-            fontWeight: 500
-          }}
-          keyboardType='email-address'
-          value={email}
-          onChangeText={setEmail}
-          placeholder='Digite seu email...' />
-      </View>
+      <TextInput
+        placeholder="Senha"
+        secureTextEntry
+        style={styles.input}
+        value={senha}
+        onChangeText={setSenha}
+        placeholderTextColor="#8a8a8a"
 
+      />
 
-      {/*Senha*/}
-      <View
-        style={{
-          marginLeft: 30,
-          marginRight: 30,
-          marginBottom: 15,
-          alignItems: 'left',
-          gap: 3,
-        }}>
-        <Text
-          style={{
-            fontSize: 16,
-            textAlign: 'left',
-            fontWeight: '600'
-          }}>
-          Senha
-        </Text>
-        <TextInput
-          style={{
-            fontSize: 14,
-            height: 50,
-            backgroundColor: '#00000018',
-            borderWidth: 3,
-            borderRadius: 10,
-            borderColor: '#263066',
-            fontWeight: 500
-          }}
-          secureTextEntry
-          value={senha}
-          onChangeText={setSenha}
-          placeholder='Digite sua senha...'
-        />
-      </View>
+      <TouchableOpacity style={styles.button} onPress={signInUser}>
+        <Text style={styles.buttonText}>Entrar</Text>
+      </TouchableOpacity>
 
-
-      {/*Buttons*/}
-      <View style={{
-        cursor: 'pointer',
-        marginTop: 15,
-        marginLeft: 30,
-        marginRight: 30,
-        marginBottom: 10,
-      }}>
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#263466',
-            borderRadius: 10,
-            padding: 10,
-          }}
-          onPress={signInUser}>
-
-          <Text style={{
-            color: 'white',
-            textAlign: 'center',
-            fontSize: 16,
-            fontWeight: '600'
-          }}>
-            Login
-          </Text>
-
-        </TouchableOpacity>
-
-      </View>
-
-      <View
-        style={{
-          cursor: 'pointer',
-          marginLeft: 30,
-          marginRight: 30,
-          marginBottom: 15,
-        }}>
-
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#263466',
-            borderRadius: 10,
-            padding: 10,
-          }}
-          onPress={() => {
-            navigation.navigate('register');
-          }}
-        >
-
-          <Text style={{
-            color: 'white',
-            textAlign: 'center',
-            fontSize: 16,
-            fontWeight: '600'
-          }}>
-            Cadastre-se
-          </Text>
-
-        </TouchableOpacity>
-      </View>
-
+      <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
+        <Text style={styles.link}>Cadastrar-se</Text>
+      </TouchableOpacity>
 
     </View>
   );
 }
+
 export default loginScreen;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 65
+  },
+
+  title: {
+    fontSize: 25,
+    marginBottom: 20,
+    textAlign: 'center',
+    
+  },
+
+  image: {
+    width: 120,
+    height: 120,
+    borderRadius: 100,
+    alignSelf: 'center',
+    marginBottom: 90,
+
+  },
+
+  input: {
+    backgroundColor: '#dedede',
+    padding: 15,
+    marginBottom: 10,
+    borderRadius: 8
+  },
+
+  button: {
+    backgroundColor: '#2F6FDB', 
+    padding: 12,
+    marginBottom: 18,
+        marginTop: 30,
+
+  },
+
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+     fontWeight: 'bold',
+  },
+
+  link: {
+    textAlign: 'left',
+    color: '#2F6FDB' 
+  }
+});
