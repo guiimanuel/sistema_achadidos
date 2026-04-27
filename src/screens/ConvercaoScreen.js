@@ -116,10 +116,10 @@ function initialScreen({ navigation }) {
     }, []);
 
     return (
-        <View style={{ flex: 1, height: '100%', width: '100%', backgroundColor: '#e6e5e5', alignItems: 'center' }}> {/* Container Principal */}
-            {/* header blue */}
+        <View style={{ flex: 1, height: '100%', width: '100%', backgroundColor: '#e6e5e5', alignItems: 'center' }}> 
+            
             <View style={{ backgroundColor: '#2F6FDB', height: 180, width: '100%', borderBottomRightRadius: 100, borderBottomLeftRadius: 100, alignItems: 'center' }}>
-                {/* Header titulo */}
+                
                 <View style={{ width: '100%', marginTop: 40, alignItems: 'center' }}>
                     <Text style={[{ color: '#ffffff', fontSize: 34, textAlign: 'center', lineHeight: 34 }, fontePlayfairBold]}>Conversor de</Text>
                     <Text style={[{ color: '#ffffff', fontSize: 34, textAlign: 'center', lineHeight: 34 }, fontePlayfairBold]}>
@@ -127,7 +127,8 @@ function initialScreen({ navigation }) {
                     </Text>
                 </View>
 
-                {/* Cotacao atual / card 01 */}
+                {/* Cotacao atual */}
+
                 <View style={{ backgroundColor: '#ffffff', width: 340, height: 80, marginTop: 25, borderRadius: 15, justifyContent: 'center', alignItems: 'center', shadowRadius: 8 }}>
                     <Text style={{ fontSize: 20, fontWeight: 'bold' }}>Cotação Atual</Text>
                     <Text style={{ fontSize: 15 }}>Ultima Atualização: {lastUpdate}</Text>
@@ -135,7 +136,8 @@ function initialScreen({ navigation }) {
 
             </View>
 
-            {/* USD/BRL Card 02 */}
+            {/* Conversão de dólar para real*/}
+
             <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, marginTop: 60,marginBottom: 25, shadowRadius: 8 }}>
                 <View style={{ height: 50, width: 50, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
                     <Image source={require('../../assets/images/us.png')} style={{ width: '100%', height: '100%' }} />
@@ -156,7 +158,8 @@ function initialScreen({ navigation }) {
                 </View>
             </View>
 
-            {/* EUR/BRL Card 03 */}
+            {/* Conversão de euro para real*/}
+
             <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, shadowRadius: 8, marginTop: 11,marginBottom: 25  }}>
                 <View style={{ height: 50, width: 50, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
                     <Image source={require('../../assets/images/eu.png')} style={{ width: '100%', height: '100%' }} />
@@ -177,7 +180,8 @@ function initialScreen({ navigation }) {
                 </View>
             </View>
 
-            {/* MXN/BRL Card 04 */}
+            {/* conversão de peso mexicano para real */}
+
             <View style={{ backgroundColor: '#ffffff', width: 340, height: 90, borderRadius: 15, shadowRadius: 8, marginTop: 11, marginBottom: 25 }}>
                 <View style={{ height: 50, width: 50, borderRadius: 20, marginBottom: -25, marginTop: 20, marginLeft: 10, overflow: 'hidden' }}>
                     <Image source={require('../../assets/images/mxn.png')} style={{ width: '100%', height: '100%' }} />
@@ -198,7 +202,8 @@ function initialScreen({ navigation }) {
                 </View>
             </View>
 
-            {/* Atualizar Cotações / BUTTON */}
+            {/* Atualizar Cotações */}
+
             <TouchableOpacity
                 style={{ backgroundColor: '#2F6FDB', width: 360, height: 60, borderRadius: 30, marginTop: 80, alignItems: 'center', justifyContent: 'center', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.4, shadowColor: '#3a2000' }}
                 onPress={atualizaCotacoes}
