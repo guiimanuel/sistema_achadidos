@@ -2,6 +2,17 @@
   "expo": {
     "name": "logincadFIREBASE2",
     "slug": "logincadFIREBASE2",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "android": {
+      "package": "com.judai.loginfirebase",
+      "permissions": [
+        "INTERNET"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2d29baec-8a45-44b7-b408-f6ac1030da09"
+      }
+    }
   }
 }

@@ -1,17 +1,19 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
+
 import {
     ActivityIndicator,
+    Alert,
     Image,
+    ScrollView,
     Text,
     TouchableOpacity,
-    View,
-    ScrollView
+    View
 } from 'react-native';
 
-
 function getFlagUrl(code) {
+
     const map = {
         USD: 'us',
         EUR: 'eu',
@@ -26,68 +28,34 @@ function getFlagUrl(code) {
     };
 
     const country = map[code];
+
     if (!country) return null;
 
     return `https://flagcdn.com/w80/${country}.png`;
 }
 
-function initialScreen() {
-    const fontePlayfairBold = { fontFamily: 'PlayfairDisplay-Bold' };
+export default function InitialScreen() {
 
     const [cotacoes, setCotacoes] = useState([]);
-    const [lastUpdate, setLastUpdate] = useState('--:--');
     const [loading, setLoading] = useState(false);
-
-    function formatBrl(value) {
-        const numberValue = Number(value);
-        if (Number.isNaN(numberValue)) return 'R$ --';
-
-        return numberValue.toLocaleString('pt-BR', {
-            style: 'currency',
-            currency: 'BRL'
-        });
-    }
-
-    function formatVariation(value) {
-        const numberValue = Number(value);
-        if (Number.isNaN(numberValue)) return '0,00%';
-
-        return Math.abs(numberValue).toLocaleString('pt-BR', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        }) + '%';
-    }
-
-    function getVariationColor(value) {
-        const numberValue = Number(value);
-        if (numberValue > 0) return 'green';
-        if (numberValue < 0) return 'red';
-        return '#6b7280';
-    }
-
-    function getVariationIcon(value) {
-        const numberValue = Number(value);
-
-        if (numberValue > 0) {
-            return <AntDesign name="caret-up" size={16} color="green" />;
-        }
-        if (numberValue < 0) {
-            return <AntDesign name="caret-down" size={16} color="red" />;
-        }
-        return <AntDesign name="minus" size={16} color="gray" />;
-    }
+    const [lastUpdate, setLastUpdate] = useState('--:--');
 
     async function consultarDados() {
+
         try {
+
             setLoading(true);
 
-            const response = await axios.get(
-                'https://economia.awesomeapi.com.br/json/all'
-            );
+            const response = await axios({
+                method: 'GET',
+                url: 'https://economia.awesomeapi.com.br/json/last/USD-BRL,EUR-BRL,GBP-BRL,JPY-BRL',
+                timeout: 15000
+            });
+
+            console.log('API OK:', response.data);
 
             const lista = Object.values(response.data).map((item) => ({
                 code: item.code,
-                codein: item.codein,
                 name: item.name,
                 value: item.bid,
                 variation: item.pctChange
@@ -95,16 +63,24 @@ function initialScreen() {
 
             setCotacoes(lista);
 
-            setLastUpdate(
-                new Date().toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                })
-            );
+            const hora = new Date().toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            setLastUpdate(hora);
 
         } catch (error) {
-            console.log(error);
+
+            console.log('ERRO COMPLETO:', error);
+
+            Alert.alert(
+                'Erro',
+                'Não foi possível carregar as cotações.'
+            );
+
         } finally {
+
             setLoading(false);
         }
     }
@@ -113,47 +89,126 @@ function initialScreen() {
         consultarDados();
     }, []);
 
+    function formatBrl(value) {
+
+        const numero = Number(value);
+
+        if (isNaN(numero)) {
+            return 'R$ --';
+        }
+
+        return `R$ ${numero.toFixed(2).replace('.', ',')}`;
+    }
+
+    function getColor(value) {
+
+        const numero = Number(value);
+
+        if (numero > 0) return 'green';
+
+        if (numero < 0) return 'red';
+
+        return 'gray';
+    }
+
+    function getIcon(value) {
+
+        const numero = Number(value);
+
+        if (numero > 0) {
+            return (
+                <AntDesign
+                    name="caret-up"
+                    size={14}
+                    color="green"
+                />
+            );
+        }
+
+        if (numero < 0) {
+            return (
+                <AntDesign
+                    name="caret-down"
+                    size={14}
+                    color="red"
+                />
+            );
+        }
+
+        return (
+            <AntDesign
+                name="minus"
+                size={14}
+                color="gray"
+            />
+        );
+    }
+
     return (
-        <View style={{ flex: 1, backgroundColor: '#e6e5e5' }}>
+
+        <View style={{
+            flex: 1,
+            backgroundColor: '#ececec'
+        }}>
 
             {/* HEADER */}
             <View style={{
                 backgroundColor: '#2F6FDB',
                 height: 180,
-                width: '100%',
-                borderBottomRightRadius: 100,
                 borderBottomLeftRadius: 100,
+                borderBottomRightRadius: 100,
                 alignItems: 'center'
             }}>
 
-                <View style={{ marginTop: 40, alignItems: 'center' }}>
-                    <Text style={[{ color: '#fff', fontSize: 34 }, fontePlayfairBold]}>
+                <View style={{
+                    marginTop: 45,
+                    alignItems: 'center'
+                }}>
+
+                    <Text style={{
+                        color: '#fff',
+                        fontSize: 32,
+                        fontWeight: 'bold'
+                    }}>
                         Conversor de
                     </Text>
-                    <Text style={[{ color: '#fff', fontSize: 34 }, fontePlayfairBold]}>
-                        Moedas <Text style={{ color: '#de0000' }}>Pro</Text>
+
+                    <Text style={{
+                        color: '#fff',
+                        fontSize: 32,
+                        fontWeight: 'bold'
+                    }}>
+                        Moedas
                     </Text>
+
                 </View>
 
                 <View style={{
                     backgroundColor: '#fff',
-                    width: 340,
-                    height: 80,
-                    marginTop: 25,
+                    width: 330,
+                    height: 75,
+                    marginTop: 20,
                     borderRadius: 15,
                     justifyContent: 'center',
                     alignItems: 'center'
                 }}>
-                    <Text style={{ fontSize: 20, fontWeight: 'bold' }}>
+
+                    <Text style={{
+                        fontSize: 18,
+                        fontWeight: 'bold'
+                    }}>
                         Cotação Atual
                     </Text>
-                    <Text style={{ fontSize: 15 }}>
-                        Última Atualização: {lastUpdate}
+
+                    <Text>
+                        Última atualização: {lastUpdate}
                     </Text>
+
                 </View>
+
             </View>
 
-         
+            {/* LISTA */}
             <ScrollView
                 contentContainerStyle={{
                     alignItems: 'center',
@@ -161,88 +216,145 @@ function initialScreen() {
                 }}
             >
 
-                {/* LISTA */}
                 {cotacoes.map((item, index) => (
-                    <View key={index} style={{
-                        backgroundColor: '#fff',
-                        width: 340,
-                        height: 90,
-                        borderRadius: 15,
-                        marginTop: 20,
-                        justifyContent: 'center'
-                    }}>
 
-                        {/* FLAGS */}
-                        <View style={{ flexDirection: 'row', marginLeft: 10 }}>
+                    <View
+                        key={index}
+                        style={{
+                            backgroundColor: '#fff',
+                            width: 340,
+                            height: 95,
+                            marginTop: 20,
+                            borderRadius: 15,
+                            justifyContent: 'center'
+                        }}
+                    >
+
+                        {/* BANDEIRAS */}
+                        <View style={{
+                            flexDirection: 'row',
+                            marginLeft: 10
+                        }}>
+
                             {getFlagUrl(item.code) && (
                                 <Image
-                                    source={{ uri: getFlagUrl(item.code) }}
-                                    style={{ width: 40, height: 40 }}
+                                    source={{
+                                        uri: getFlagUrl(item.code)
+                                    }}
+                                    style={{
+                                        width: 40,
+                                        height: 40
+                                    }}
                                 />
                             )}
 
                             <Image
                                 source={require('../../assets/images/br.png')}
-                                style={{ width: 30, height: 30, marginLeft: -10, marginTop: 10 }}
+                                style={{
+                                    width: 30,
+                                    height: 30,
+                                    marginLeft: -10,
+                                    marginTop: 10
+                                }}
                             />
+
                         </View>
 
-                     
-                        <View style={{ position: 'absolute', left: 80 }}>
-                            <Text style={{ fontWeight: 'bold', fontSize: 18 }}>
+                        {/* TEXTO */}
+                        <View style={{
+                            position: 'absolute',
+                            left: 80
+                        }}>
+
+                            <Text style={{
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            }}>
                                 {item.code}/BRL
                             </Text>
-                            <Text numberOfLines={1} style={{ width: 180 }}>
+
+                            <Text
+                                numberOfLines={1}
+                                style={{
+                                    width: 160
+                                }}
+                            >
                                 {item.name}
                             </Text>
+
                         </View>
 
-                        {/* Estilo do valor anterior */}
-                        <View style={{ position: 'absolute', right: 12 }}>
-                            <Text style={{ fontSize: 18, fontWeight: 'bold' }}>
+                        {/* VALOR */}
+                        <View style={{
+                            position: 'absolute',
+                            right: 12
+                        }}>
+
+                            <Text style={{
+                                fontSize: 18,
+                                fontWeight: 'bold'
+                            }}>
                                 {formatBrl(item.value)}
                             </Text>
 
-                            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                {getVariationIcon(item.variation)}
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center'
+                            }}>
+
+                                {getIcon(item.variation)}
+
                                 <Text style={{
                                     marginLeft: 4,
-                                    color: getVariationColor(item.variation)
+                                    color: getColor(item.variation)
                                 }}>
                                     {Number(item.variation) > 0 ? '+' : ''}
-                                    {formatVariation(item.variation)}
+                                    {Math.abs(
+                                        Number(item.variation)
+                                    ).toFixed(2)}%
                                 </Text>
+
                             </View>
+
                         </View>
 
                     </View>
+
                 ))}
 
-                
+                {/* BOTÃO */}
                 <TouchableOpacity
-                    style={{
-                        backgroundColor: '#2F6FDB',
-                        width: 360,
-                        height: 60,
-                        borderRadius: 30,
-                        marginTop: 40,
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
                     onPress={consultarDados}
                     disabled={loading}
+                    style={{
+                        backgroundColor: '#2F6FDB',
+                        width: 340,
+                        height: 60,
+                        borderRadius: 30,
+                        marginTop: 35,
+                        justifyContent: 'center',
+                        alignItems: 'center'
+                    }}
                 >
-                    <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18 }}>
+
+                    <Text style={{
+                        color: '#fff',
+                        fontWeight: 'bold',
+                        fontSize: 18
+                    }}>
                         Atualizar Cotações
                     </Text>
 
                     {loading && (
                         <ActivityIndicator
-                            size="small"
                             color="#fff"
-                            style={{ position: 'absolute', right: 20 }}
+                            style={{
+                                position: 'absolute',
+                                right: 20
+                            }}
                         />
                     )}
+
                 </TouchableOpacity>
 
             </ScrollView>
@@ -250,5 +362,3 @@ function initialScreen() {
         </View>
     );
 }
-
-export default initialScreen;
