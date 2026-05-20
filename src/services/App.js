@@ -35,11 +35,11 @@ function App() {
           name="login"
           component={loginScreen}
           options={{
-            title: 'Tela de Login',
+            title: '',
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold' },
-            headerTintColor: '#ffffff',
-            headerStyle: { backgroundColor: '#2F6FDB' }
+            headerTintColor: '#283f4e',
+            headerStyle: { backgroundColor: '#d9ebff' }
           }} />
 
         <Stack.Screen
@@ -54,11 +54,11 @@ function App() {
           name="Cadastro"
           component={CadastroScreen}
           options={{
-            title: 'Tela de Cadastro',
+            title: '',
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold' },
-            headerTintColor: '#ffffff',
-            headerStyle: { backgroundColor: '#2F6FDB' }
+            headerTintColor: '#283f4e',
+            headerStyle: { backgroundColor: '#d9ebff' }
           }}
         />
 

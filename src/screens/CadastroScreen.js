@@ -24,7 +24,9 @@ function registerScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar style="auto" />
 
-      <Text style={styles.title}>Cadastro:</Text>
+      <Text style={styles.title}>Criar Conta</Text>
+            <Text style={styles.title1}>Preencha os dados pra se cadastrar</Text>
+
 
       <TextInput
         style={styles.input}
@@ -60,22 +62,37 @@ export default registerScreen;
 
 const styles = StyleSheet.create({
   container: {
+    
     flex: 1,
     justifyContent: 'center',
     padding: 65
   },
 
   title: {
-    fontSize: 25,
-    marginBottom: 100,
-    textAlign: 'center'
+    color: '#09245c',
+    fontSize: 32,
+    marginBottom: 10,
+    fontWeight: 'bold',
+
+  
   },
 
+   title1: {
+    color: '#09245c',
+    fontSize: 15,
+    marginBottom: 100,
+    
+    
+  },
+
+
   input: {
-    backgroundColor: '#dedede',
+    backgroundColor: '#ffffff',
     padding: 15,
     marginBottom: 10,
-    borderRadius: 8
+    borderRadius: 8,
+    borderColor: '#171f35',
+    borderWidth: 1,
   },
 
   button: {
@@ -83,14 +100,14 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 10,
     marginTop: 30,
-
-
+    borderRadius: 8,
   },
 
   buttonText: {
     fontWeight: 'bold',
     color: '#fff',
-    textAlign: 'center'
+    textAlign: 'center',
+
   },
 
   link: {

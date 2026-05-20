@@ -24,12 +24,20 @@ function loginScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar style="auto" />
 
-      <Text style={styles.title}>Realize seu Login:</Text>
 
       <Image
         style={styles.image}
-        source={require('../../assets/images/fotoperfil.png')}
+        source={require('../../assets/images/mundoAzul-removebg-preview.png')}
       />
+
+      <Text style={styles.title}>CONHEÇA</Text>
+      <Text style={styles.title2}>O MUNDO</Text>
+
+            <Text style={styles.titlemini}>Explore. Descubra.{" "}
+    <Text style={styles.titlemini2}>Viaje.</Text></Text>
+
+
+
 
       <TextInput
         placeholder="Email"
@@ -56,7 +64,8 @@ function loginScreen({ navigation }) {
       </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
-        <Text style={styles.link}>Cadastrar-se</Text>
+        <Text style={styles.link}>Ainda não tem conta? {" "}
+    <Text style={styles.link2}>Cadastre-se</Text></Text>
       </TouchableOpacity>
 
     </View>
@@ -67,24 +76,58 @@ export default loginScreen;
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: '#d8edff',
     flex: 1,
     justifyContent: 'center',
     padding: 65
   },
 
   title: {
-    fontSize: 25,
-    marginBottom: 20,
+    fontSize: 35,
+    
     textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#09245c'
+
+    
+  },
+
+  title2: {
+    fontSize: 35,
+    marginBottom:40,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#091c5c'
+
+
+    
+  },
+
+   titlemini: {
+    fontSize: 17,
+    marginBottom:40,
+    textAlign: 'center',
+    color: '#09245c'
+
+    
+  },
+
+ titlemini2: {
+    fontSize: 19,
+    marginBottom:40,
+    textAlign: 'center',
+    fontWeight: 'bold',
+    color: '#059600'
+
     
   },
 
   image: {
-    width: 120,
-    height: 120,
+    width: 320,
+    height: 320,
     borderRadius: 100,
     alignSelf: 'center',
-    marginBottom: 90,
+  
 
   },
 
@@ -92,7 +135,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#dedede',
     padding: 15,
     marginBottom: 10,
-    borderRadius: 8
+    borderRadius: 8,
+     borderColor: '#171f35',
+    borderWidth: 1,
+    
   },
 
   button: {
@@ -100,6 +146,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 18,
         marginTop: 30,
+        borderRadius: 8
 
   },
 
@@ -111,6 +158,14 @@ const styles = StyleSheet.create({
 
   link: {
     textAlign: 'left',
-    color: '#2F6FDB' 
+    color: '#000000',
+ 
+
+  },
+
+   link2: {
+    textAlign: 'left',
+    color: '#2F6FDB',
   }
+
 });
