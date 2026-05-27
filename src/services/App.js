@@ -9,6 +9,8 @@ import ConvercaoScreen from '../screens/ConvercaoScreen';
 import CadastroScreen from '../screens/CadastroScreen';
 import AlterarSenhaScreen from '../screens/AlterarSenhaScreen';
 import PerfilScreen from '../screens/PerfilScreen';
+import DetalharScreen from '../screens/DetalharScreen';
+
 
 
 
@@ -49,6 +51,14 @@ function App() {
         <Stack.Screen
           name="Convercao"
           component={ConvercaoScreen}
+          options={{
+            headerShown: false
+          }}
+        />
+
+          <Stack.Screen
+          name="Detalhar"
+          component={DetalharScreen}
           options={{
             headerShown: false
           }}

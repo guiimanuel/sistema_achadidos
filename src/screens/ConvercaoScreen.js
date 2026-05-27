@@ -126,9 +126,17 @@ export default function InitialScreen() {
 
           countries.map((item, index) => (
 
-            <TouchableOpacity
-              key={index}
-              style={{
+           <TouchableOpacity
+  key={index}
+  onPress={() =>
+    navigation.navigate(
+      'Detalhar',
+      {
+        countryName: item.name.common
+      }
+    )
+  }
+  style={{
                 backgroundColor: '#fff',
                 height: 80,
                 borderRadius: 18,
