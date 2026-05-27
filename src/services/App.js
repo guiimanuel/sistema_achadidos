@@ -7,6 +7,8 @@ import { getAnalytics } from "firebase/analytics";
 import loginScreen from '../screens/loginScreen';
 import ConvercaoScreen from '../screens/ConvercaoScreen';
 import CadastroScreen from '../screens/CadastroScreen';
+import AlterarSenhaScreen from '../screens/AlterarSenhaScreen';
+
 
 const Stack = createNativeStackNavigator();
 
@@ -50,6 +52,19 @@ function App() {
           }}
         />
 
+         <Stack.Screen
+          name="AlterarSenhaScreen"
+          component={AlterarSenhaScreen}
+          options={{
+            title: '',
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerTintColor: '#283f4e',
+            headerStyle: { backgroundColor: '#d9ebff' }
+          }} />
+
+        
+
         <Stack.Screen
           name="Cadastro"
           component={CadastroScreen}
@@ -61,6 +76,8 @@ function App() {
             headerStyle: { backgroundColor: '#d9ebff' }
           }}
         />
+
+        
 
       </Stack.Navigator>
 

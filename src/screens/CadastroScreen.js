@@ -55,8 +55,13 @@ function registerScreen({ navigation }) {
       </TouchableOpacity>
 
     </View>
+
   );
+
+   
 }
+
+
 
 export default registerScreen;
 
