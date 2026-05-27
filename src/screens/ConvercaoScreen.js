@@ -2,7 +2,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import {ActivityIndicator,Image,ScrollView,Text,TextInput,TouchableOpacity,View} from 'react-native';
+import { ActivityIndicator, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function InitialScreen() {
 
@@ -184,6 +184,86 @@ export default function InitialScreen() {
 
       </ScrollView>
 
+      <View
+        style={{
+          height: 70,
+          backgroundColor: '#fff',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E5E5',
+          elevation: 10
+        }}
+      >
+
+        <TouchableOpacity onPress={() => navigation.navigate('Convercao')}
+          style={{
+            alignItems: 'center'
+          }}
+        >
+          <AntDesign
+            name="home"
+            size={24}
+            color="#2F6FDB"
+          />
+
+          <Text
+            style={{
+              fontSize: 12,
+              marginTop: 4,
+              color: '#2F6FDB'
+            }}
+          >
+            Início
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity  onPress={() => navigation.navigate('Perfil')}
+          style={{
+            alignItems: 'center'
+          }}
+        >
+          <AntDesign
+            name="staro"
+            size={24}
+            color="gray"
+          />
+
+          <Text
+            style={{
+              fontSize: 12,
+              marginTop: 4,
+              color: 'gray'
+            }}
+          >
+            Favoritos
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{
+            alignItems: 'center'
+          }}
+        >
+          <AntDesign
+            name="user"
+            size={24}
+            color="gray"
+          />
+
+          <Text
+            style={{
+              fontSize: 12,
+              marginTop: 4,
+              color: 'gray'
+            }}
+          >
+            Perfil
+          </Text>
+        </TouchableOpacity>
+
+      </View>
     </View>
   );
 }
