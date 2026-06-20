@@ -27,20 +27,20 @@ function loginScreen({ navigation }) {
 
       <Image
         style={styles.image}
-        source={require('../../assets/images/mundoAzul-removebg-preview.png')}
+        source={require('../../assets/images/caixa.png')}
       />
 
-      <Text style={styles.title}>CONHEÇA</Text>
-      <Text style={styles.title2}>O MUNDO</Text>
+      <Text style={styles.title}>BEM VINDO</Text>
+      <Text style={styles.title2}></Text>
 
-            <Text style={styles.titlemini}>Explore. Descubra.{" "}
-    <Text style={styles.titlemini2}>Viaje.</Text></Text>
+            <Text style={styles.titlemini}>Faça o seu login com{" "}
+    <Text style={styles.titlemini2}>email e senha</Text></Text>
 
 
 
 
       <TextInput
-        placeholder="Email"
+        placeholder="Email institucional..."
         style={styles.input}
         keyboardType="email-address"
         value={email}
@@ -50,7 +50,7 @@ function loginScreen({ navigation }) {
       />
 
       <TextInput
-        placeholder="Senha"
+        placeholder="Senha..."
         secureTextEntry
         style={styles.input}
         value={senha}
@@ -60,12 +60,19 @@ function loginScreen({ navigation }) {
       />
 
       <TouchableOpacity style={styles.button} onPress={signInUser}>
-        <Text style={styles.buttonText}>Entrar</Text>
+        <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
+      
+        
       <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
         <Text style={styles.link}>Ainda não tem conta? {" "}
     <Text style={styles.link2}>Cadastre-se</Text></Text>
+      </TouchableOpacity>
+
+       <TouchableOpacity onPress={() => navigation.navigate('AlterarSenhaScreen')}>
+        <Text style={styles.link}>Esqueceu a senha? {" "}
+    <Text style={styles.link2}>Alterar</Text></Text>
       </TouchableOpacity>
 
     </View>
@@ -76,45 +83,14 @@ export default loginScreen;
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#d8edff',
+    backgroundColor: '#fcfaf7',
     flex: 1,
     justifyContent: 'center',
     padding: 65
   },
 
   title: {
-    fontSize: 35,
-    
-    textAlign: 'center',
-    fontWeight: 'bold',
-    color: '#09245c'
-
-    
-  },
-
-  title2: {
-    fontSize: 35,
-    marginBottom:40,
-    textAlign: 'center',
-    fontWeight: 'bold',
-    color: '#091c5c'
-
-
-    
-  },
-
-   titlemini: {
-    fontSize: 17,
-    marginBottom:40,
-    textAlign: 'center',
-    color: '#09245c'
-
-    
-  },
-
- titlemini2: {
-    fontSize: 19,
-    marginBottom:40,
+    fontSize: 34,
     textAlign: 'center',
     fontWeight: 'bold',
     color: '#059600'
@@ -122,17 +98,37 @@ const styles = StyleSheet.create({
     
   },
 
+
+
+   titlemini: {
+    fontSize: 17,
+    marginBottom:100,
+    textAlign: 'center',
+    color: '#059600'
+
+    
+  },
+
+ titlemini2: {
+    fontSize: 17,
+    marginBottom:100,
+    textAlign: 'center',
+    color: '#059600'
+
+    
+  },
+
   image: {
-    width: 320,
-    height: 320,
-    borderRadius: 100,
+    width: 250,
+    height: 184,
+  
     alignSelf: 'center',
   
 
   },
 
   input: {
-    backgroundColor: '#dedede',
+    backgroundColor: '#ffffff',
     padding: 15,
     marginBottom: 10,
     borderRadius: 8,
@@ -142,9 +138,9 @@ const styles = StyleSheet.create({
   },
 
   button: {
-    backgroundColor: '#2F6FDB', 
+    backgroundColor: '#059600', 
     padding: 12,
-    marginBottom: 18,
+    marginBottom: 11,
         marginTop: 30,
         borderRadius: 8
 
@@ -165,7 +161,9 @@ const styles = StyleSheet.create({
 
    link2: {
     textAlign: 'left',
-    color: '#2F6FDB',
+    color: '#059600',
+        fontSize: 15,
+
   }
 
 });

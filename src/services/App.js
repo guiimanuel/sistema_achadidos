@@ -41,20 +41,25 @@ function App() {
           name="login"
           component={loginScreen}
           options={{
-            title: '',
+            title: 'ACHADOS E PERDIDOS',
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold' },
-            headerTintColor: '#283f4e',
-            headerStyle: { backgroundColor: '#d9ebff' }
+            headerTintColor: '#ffffff',
+            headerStyle: { backgroundColor: '#059600' }
           }} />
 
-        <Stack.Screen
+          <Stack.Screen
           name="Convercao"
           component={ConvercaoScreen}
           options={{
-            headerShown: false
-          }}
-        />
+            title: 'ACHADOS E PERDIDOS',
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerTintColor: '#ffffff',
+            headerStyle: { backgroundColor: '#059600' }
+          }} />
+
+      
 
           <Stack.Screen
           name="Detalhar"
@@ -64,23 +69,27 @@ function App() {
           }}
         />
 
-         <Stack.Screen
+        <Stack.Screen
           name="Perfil"
           component={PerfilScreen}
           options={{
-            headerShown: false
+            title: '',
+            headerTitleAlign: 'center',
+            headerTitleStyle: { fontWeight: 'bold' },
+            headerTintColor: '#ffffff',
+            headerStyle: { backgroundColor: '#2F6FDB' }
           }}
         />
 
          <Stack.Screen
           name="AlterarSenhaScreen"
           component={AlterarSenhaScreen}
-          options={{
-            title: '',
+         options={{
+            title: 'ACHADOS E PERDIDOS',
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold' },
-            headerTintColor: '#283f4e',
-            headerStyle: { backgroundColor: '#d9ebff' }
+            headerTintColor: '#ffffff',
+            headerStyle: { backgroundColor: '#059600' }
           }} />
 
         
@@ -89,11 +98,11 @@ function App() {
           name="Cadastro"
           component={CadastroScreen}
           options={{
-            title: '',
+            title: 'ACHADOS E PERDIDOS',
             headerTitleAlign: 'center',
             headerTitleStyle: { fontWeight: 'bold' },
-            headerTintColor: '#283f4e',
-            headerStyle: { backgroundColor: '#d9ebff' }
+            headerTintColor: '#ffffff',
+            headerStyle: { backgroundColor: '#059600' }
           }}
         />
 

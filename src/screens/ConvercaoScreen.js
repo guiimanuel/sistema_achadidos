@@ -89,25 +89,7 @@ export default function InitialScreen() {
 
         </View>
 
-        <TouchableOpacity
-          onPress={() => navigation.navigate('AlterarSenhaScreen')}
-        >
-          <Text style={{
-            color: '#fff',
-            marginTop: 15,
-            textAlign: 'center'
-          }}>
-            Esqueceu a senha?{" "}
-
-            <Text style={{
-              fontWeight: 'bold',
-              textDecorationLine: 'underline'
-            }}>
-              Clique aqui
-            </Text>
-
-          </Text>
-        </TouchableOpacity>
+  
 
       </View>
 
@@ -227,7 +209,7 @@ export default function InitialScreen() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity  onPress={() => navigation.navigate('Perfil')}
+        <TouchableOpacity  
           style={{
             alignItems: 'center'
           }}
@@ -249,7 +231,7 @@ export default function InitialScreen() {
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
+        <TouchableOpacity onPress={() => navigation.navigate('Perfil')}
           style={{
             alignItems: 'center'
           }}

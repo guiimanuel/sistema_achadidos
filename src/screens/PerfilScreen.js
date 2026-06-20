@@ -1,44 +1,12 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import {
-  Text,
-  View,
-  Image,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet
-} from 'react-native';
-
-import { useState } from 'react';
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  signOut
-} from "firebase/auth";
+import { Text, View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { getAuth, signOut } from "firebase/auth";
+import AntDesign from '@expo/vector-icons/AntDesign';
 
 function PerfilScreen({ navigation }) {
 
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
   const auth = getAuth();
-
-  const signInUser = () => {
-
-    signInWithEmailAndPassword(auth, email, senha)
-
-      .then((userCredential) => {
-
-        const user = userCredential.user;
-
-        navigation.navigate('Convercao', { user });
-
-      })
-
-      .catch(() => {
-        alert('Email ou senha inválidos!');
-      });
-
-  };
 
   const logoutUser = () => {
 
@@ -95,54 +63,116 @@ function PerfilScreen({ navigation }) {
           source={require('../../assets/images/fotoperfil.png')}
         />
 
-        <Text style={styles.title}>email aqui</Text>
-
-        <TextInput
-          placeholder="Email"
-          style={styles.input}
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-          placeholderTextColor="#8a8a8a"
-        />
-
-        <TextInput
-          placeholder="Senha"
-          secureTextEntry
-          style={styles.input}
-          value={senha}
-          onChangeText={setSenha}
-          placeholderTextColor="#8a8a8a"
-        />
+        <Text style={styles.title}> {auth.currentUser?.email}</Text>
 
         {/*funcao logout*/}
+
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate('AlterarSenhaScreen')}
+        >
+          <Text style={styles.buttonText}>
+            <AntDesign name="lock" size={21} color="#161930" /> Alterar Senha
+          </Text>
+
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.button}
           onPress={logoutUser}
         >
 
-          <Text style={styles.buttonText}>
-            Logout
-          </Text>
-
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => navigation.navigate('Cadastro')}
-        >
-
-          <Text style={styles.link}>
-            Ainda não tem conta?{" "}
-
-            <Text style={styles.link2}>
-              Cadastre-se
-            </Text>
-
+          <Text style={styles.buttonText2}>
+            <AntDesign name="logout" size={20} color="#be0000" /> Logout
           </Text>
 
         </TouchableOpacity>
 
       </View>
+
+      <View
+        style={{
+          height: 70,
+          backgroundColor: '#fff',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          borderTopWidth: 1,
+          borderTopColor: '#E5E5E5',
+          elevation: 10
+        }}
+      >
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Convercao')}
+          style={{
+            alignItems: 'center'
+          }}
+        >
+          <AntDesign
+            name="home"
+            size={24}
+            color="gray"
+          />
+
+          <Text
+            style={{
+              fontSize: 12,
+              marginTop: 4,
+              color: 'gray'
+            }}
+          >
+            Início
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{
+            alignItems: 'center'
+          }}
+        >
+          <AntDesign
+            name="staro"
+            size={24}
+            color="gray"
+          />
+
+          <Text
+            style={{
+              fontSize: 12,
+              marginTop: 4,
+              color: 'gray'
+            }}
+          >
+            Favoritos
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Perfil')}
+          style={{
+            alignItems: 'center'
+          }}
+        >
+          <AntDesign
+            name="user"
+            size={24}
+            color="#2F6FDB"
+          />
+
+          <Text
+            style={{
+              fontSize: 12,
+              marginTop: 4,
+              color: '#2F6FDB'
+            }}
+          >
+            Perfil
+          </Text>
+        </TouchableOpacity>
+
+      </View>
+
 
     </View>
   );
@@ -159,39 +189,39 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 35,
+    fontSize: 22,
     textAlign: 'center',
-  
-    color: '#09245c'
+    color: '#161930',
+    marginBottom: 30
+
   },
 
   image: {
-    width: 200,
-    height: 200,
+    width: 120,
+    height: 120,
     borderRadius: 200,
     alignSelf: 'center',
     marginBottom: 10
   },
 
-  input: {
-    backgroundColor: '#dedede',
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 8,
-    borderColor: '#171f35',
-    borderWidth: 1,
-  },
-
   button: {
-    backgroundColor: '#ff3b30',
-    padding: 12,
-    marginBottom: 18,
-    marginTop: 30,
-    borderRadius: 8
+    backgroundColor: '#F3F6FB',
+    borderWidth: 2,
+    padding: 14,
+    marginBottom: 2,
+    marginTop: 25,
+    borderRadius: 8,
+    borderColor: "#c0c0c0",
   },
 
   buttonText: {
-    color: '#fff',
+    color: '#161930',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+
+  buttonText2: {
+    color: '#be0000',
     textAlign: 'center',
     fontWeight: 'bold',
   },
