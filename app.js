@@ -47,10 +47,6 @@ function app() {
             headerStyle: { backgroundColor: colors.green_primary },
           }}
         />
-        <Stack.Screen
-          name="home"
-          component={homeScreen}
-        />
       </Stack.Navigator>
     </NavigationContainer>
   );
