@@ -2,6 +2,32 @@
   "expo": {
     "name": "system_achadidos",
     "slug": "system_achadidos",
-    "version": "1.0.0"
+    "version": "1.0.0",
+    "ios": {
+      "bundleIdentifier": "com.systemachadidos",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.",
+        "NSPhotoLibraryUsageDescription": "Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações."
+      }
+    },
+    "android": {
+      "package": "com.systemachadidos",
+      "permissions": [
+        "INTERNET",
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.",
+          "photosPermission": "Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-font"
+    ]
   }
 }

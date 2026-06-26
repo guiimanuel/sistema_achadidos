@@ -33,6 +33,10 @@
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
