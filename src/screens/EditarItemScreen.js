@@ -1,34 +1,30 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
   Image,
   SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { atualizarPublicacao, excluirPublicacao } from "../services/publicacoes.js";
 
-const filtros = [
-  "Caderno",
-  "Material escolar",
-  "Utensílio pessoal",
-  "Celular",
-  "Garrafa",
-];
+const filtros = ["Caderno", "Material escolar", "Utensílio pessoal", "Celular", "Garrafa"];
 
-export default function EditarItem({ navigation, route }) {
+function EditarItem({ navigation, route }) {
   const { item } = route.params || {};
 
-  const [itemId] = useState(item?.id || item?._id || item?.key || String(Date.now()));
-
-  const [titulo, setTitulo] = useState(item?.titulo || "");
-  const [descricao, setDescricao] = useState(item?.descricao || "");
-  const [imagem, setImagem] = useState(item?.imageUrl || null);
+  const [titulo, setTitulo] = useState(item?.titulo || item?.title || "");
+  const [descricao, setDescricao] = useState(item?.descricao || item?.description || "");
+  const [imagem, setImagem] = useState(item?.imageUrl || "");
   const [filtroSelecionado, setFiltroSelecionado] = useState(
-    item?.filtro || ""
+    item?.filtro || item?.category || ""
   );
+  const [salvando, setSalvando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
 
   useEffect(() => {
     if (route?.params?.imagemRecebida) {
@@ -37,75 +33,70 @@ export default function EditarItem({ navigation, route }) {
   }, [route?.params?.imagemRecebida]);
 
   async function salvarEdicao() {
+    if (!item) {
+      Alert.alert("Erro", "Publicação não encontrada.");
+      return;
+    }
+
+    if (!titulo.trim()) {
+      Alert.alert("Título obrigatório", "Informe um título para a publicação.");
+      return;
+    }
+
+    if (!filtroSelecionado) {
+      Alert.alert("Filtro obrigatório", "Escolha uma categoria para a publicação.");
+      return;
+    }
+
     try {
-      if (!itemId) {
-        console.log("Erro interno: ID não configurado.");
-        return;
-      }
-
-      const dados = await AsyncStorage.getItem("@publicacoes");
-
-      if (dados) {
-        let lista = JSON.parse(dados);
-
-        lista = lista.map((p) => {
-          const currentId = p.id || p._id || p.key;
-          return currentId === itemId
-            ? {
-                ...p,
-                id: itemId, 
-                titulo,
-                descricao,
-                imageUrl: imagem,
-                filtro: filtroSelecionado,
-              }
-            : p;
-        });
-
-        await AsyncStorage.setItem("@publicacoes", JSON.stringify(lista));
-      }
-
-      
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "MinhasPublicacoes" }],
+      setSalvando(true);
+      await atualizarPublicacao(item, {
+        titulo,
+        descricao,
+        filtro: filtroSelecionado,
+        imagem,
       });
+
+      navigation.navigate("Home");
     } catch (error) {
       console.log("Erro ao salvar edição:", error);
+      Alert.alert("Erro ao salvar", error.message || "Não foi possível salvar a edição.");
+    } finally {
+      setSalvando(false);
     }
+  }
+
+  function confirmarExclusao() {
+    Alert.alert("Excluir publicação", "Esta ação não pode ser desfeita.", [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Excluir", style: "destructive", onPress: excluirItem },
+    ]);
   }
 
   async function excluirItem() {
+    if (!item) {
+      Alert.alert("Erro", "Publicação não encontrada.");
+      return;
+    }
+
     try {
-      if (!itemId) return;
-
-      const dados = await AsyncStorage.getItem("@publicacoes");
-
-      if (dados) {
-        let lista = JSON.parse(dados);
-
-        lista = lista.filter((p) => {
-          const currentId = p.id || p._id || p.key;
-          return currentId !== itemId;
-        });
-
-        await AsyncStorage.setItem("@publicacoes", JSON.stringify(lista));
-      }
-
-      navigation.reset({
-        index: 0,
-        routes: [{ name: "MinhasPublicacoes" }],
-      });
+      setExcluindo(true);
+      await excluirPublicacao(item);
+      navigation.navigate("Home");
     } catch (error) {
       console.log("Erro ao excluir item:", error);
+      Alert.alert("Erro ao excluir", error.message || "Não foi possível excluir a publicação.");
+    } finally {
+      setExcluindo(false);
     }
   }
 
+  const desabilitado = salvando || excluindo;
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* HEADER */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity onPress={() => navigation.goBack()} disabled={desabilitado}>
           <Text style={styles.back}>←</Text>
         </TouchableOpacity>
 
@@ -115,11 +106,11 @@ export default function EditarItem({ navigation, route }) {
       <View style={styles.container}>
         <Text style={styles.mainTitle}>Editar item</Text>
 
-        {/* IMAGEM */}
         <View style={styles.imageContainer}>
           <TouchableOpacity
             style={styles.imageBox}
-            onPress={() => navigation.navigate("EscolherImagemEditar")}
+            onPress={() => navigation.navigate("EscolherImagem", { origem: "EditarItem" })}
+            disabled={desabilitado}
           >
             {imagem ? (
               <Image source={{ uri: imagem }} style={styles.preview} />
@@ -130,30 +121,30 @@ export default function EditarItem({ navigation, route }) {
 
           <TouchableOpacity
             style={styles.changeImageButton}
-            onPress={() => navigation.navigate("EscolherImagemEditar")}
+            onPress={() => navigation.navigate("EscolherImagem", { origem: "EditarItem" })}
+            disabled={desabilitado}
           >
             <Text style={styles.changeImageText}>Mudar Imagem</Text>
           </TouchableOpacity>
         </View>
 
-        {/* TITULO */}
         <Text style={styles.label}>Título</Text>
         <TextInput
           style={styles.input}
           value={titulo}
           onChangeText={setTitulo}
+          editable={!desabilitado}
         />
 
-        {/* DESCRIÇÃO */}
         <Text style={styles.label}>Descrição</Text>
         <TextInput
           style={[styles.input, styles.textArea]}
           value={descricao}
           onChangeText={setDescricao}
+          editable={!desabilitado}
           multiline
         />
 
-        {/* FILTROS */}
         <Text style={styles.label}>Filtro</Text>
 
         <View style={styles.filterContainer}>
@@ -165,32 +156,32 @@ export default function EditarItem({ navigation, route }) {
                 filtroSelecionado === filtro && styles.filterSelected,
               ]}
               onPress={() => setFiltroSelecionado(filtro)}
+              disabled={desabilitado}
             >
               <Text>{filtro}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* TAG */}
         {filtroSelecionado ? (
           <View style={styles.tag}>
             <Text style={styles.tagText}>{filtroSelecionado}</Text>
           </View>
         ) : null}
 
-        {/* SALVAR */}
-        <TouchableOpacity style={styles.btnPublish} onPress={salvarEdicao}>
-          <Text style={styles.btnText}>Publicar</Text>
+        <TouchableOpacity style={styles.btnPublish} onPress={salvarEdicao} disabled={desabilitado}>
+          {salvando ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Salvar</Text>}
         </TouchableOpacity>
 
-        {/* EXCLUIR */}
-        <TouchableOpacity style={styles.btnDelete} onPress={excluirItem}>
-          <Text style={styles.btnText}>Excluir</Text>
+        <TouchableOpacity style={styles.btnDelete} onPress={confirmarExclusao} disabled={desabilitado}>
+          {excluindo ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Excluir</Text>}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
+
+export default EditarItem;
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -299,12 +290,16 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: "center",
     marginBottom: 15,
+    minHeight: 50,
+    justifyContent: "center",
   },
   btnDelete: {
     backgroundColor: "#990000",
     paddingVertical: 14,
     borderRadius: 5,
     alignItems: "center",
+    minHeight: 50,
+    justifyContent: "center",
   },
   btnText: {
     color: "#fff",

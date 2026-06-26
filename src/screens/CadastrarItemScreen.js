@@ -1,57 +1,81 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  TextInput,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
   Image,
-} from "react-native";
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { auth } from '../utils/firebase.js';
+import { criarPublicacao } from '../services/publicacoes.js';
+import { colors } from '../components/colors.js';
 
-const filtros = [
-  "Caderno",
-  "Material escolar",
-  "Utensílio pessoal",
-  "Celular",
-  "Garrafa",
-];
+const filtros = ['Caderno', 'Material escolar', 'Utensílio pessoal', 'Celular', 'Garrafa'];
 
-export default function CadastrarItem({ navigation, route }) {
-  const [titulo, setTitulo] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [filtroSelecionado, setFiltroSelecionado] = useState("");
+function CadastrarItem({ navigation, route }) {
+  const [titulo, setTitulo] = useState('');
+  const [descricao, setDescricao] = useState('');
+  const [filtroSelecionado, setFiltroSelecionado] = useState('');
+  const [publicando, setPublicando] = useState(false);
 
-  const imagemRecebida = route?.params?.imagemRecebida;
+  const imagemRecebida = route?.params?.imagemRecebida || '';
 
-  function publicar() {
-    const novaPublicacao = {
-      id: Date.now().toString(),
-      titulo,
-      descricao,
-      filtro: filtroSelecionado,
-      imageUrl: imagemRecebida || null,
-      createdAt: new Date(),
-    };
+  async function publicar() {
+    if (!auth.currentUser) {
+      Alert.alert('Login necessário', 'Entre na sua conta para publicar um item.');
+      navigation.navigate('Login');
+      return;
+    }
 
-    navigation.navigate("MinhasPublicacoes", {
-      novaPublicacao,
-    });
+    if (!titulo.trim()) {
+      Alert.alert('Título obrigatório', 'Informe um título para a publicação.');
+      return;
+    }
+
+    if (!filtroSelecionado) {
+      Alert.alert('Filtro obrigatório', 'Escolha uma categoria para a publicação.');
+      return;
+    }
+
+    try {
+      setPublicando(true);
+      await criarPublicacao({
+        titulo,
+        descricao,
+        filtro: filtroSelecionado,
+        imagem: imagemRecebida,
+      });
+
+      Alert.alert('Publicado', 'Item cadastrado com sucesso.', [
+        { text: 'OK', onPress: () => navigation.navigate('Home') },
+      ]);
+    } catch (error) {
+      console.log('Erro ao publicar item:', error);
+      Alert.alert('Erro ao publicar', getPublishErrorMessage(error));
+    } finally {
+      setPublicando(false);
+    }
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Cadastrar Item</Text>
-
       <Text style={styles.title}>Adicionar item</Text>
 
       <TouchableOpacity
         style={styles.imageBox}
-        onPress={() => navigation.navigate("EscolherImagem")}
+        onPress={() => navigation.navigate('EscolherImagem', { origem: 'CadastrarItem' })}
+        disabled={publicando}
       >
         {imagemRecebida ? (
           <Image source={{ uri: imagemRecebida }} style={styles.preview} />
         ) : (
-          <Text>+ adicionar imagem</Text>
+          <Text style={{ color: '#555', fontFamily: 'MontserratMedium', fontSize: 16 }}>
+            <Ionicons name="add-circle-outline" size={22} color="#555" /> Adicionar imagem
+          </Text>
         )}
       </TouchableOpacity>
 
@@ -61,108 +85,140 @@ export default function CadastrarItem({ navigation, route }) {
         {filtros.map((filtro) => (
           <TouchableOpacity
             key={filtro}
-            style={[
-              styles.filterButton,
-              filtroSelecionado === filtro && styles.filterSelected,
-            ]}
+            style={[styles.filterButton, filtroSelecionado === filtro && styles.filterSelected]}
             onPress={() => setFiltroSelecionado(filtro)}
+            disabled={publicando}
           >
-            <Text>{filtro}</Text>
+            <Text style={{ fontFamily: 'MontserratMedium' }}>{filtro}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <TextInput
-        placeholder="Adicionar Título..."
+        placeholder="Adicionar título..."
         style={styles.input}
         value={titulo}
         onChangeText={setTitulo}
+        editable={!publicando}
       />
 
       <TextInput
-        placeholder="Adicionar Descrição..."
-        style={styles.input}
+        placeholder="Adicionar descrição..."
+        style={[styles.input, styles.textArea]}
         value={descricao}
         onChangeText={setDescricao}
+        editable={!publicando}
+        multiline
       />
 
       {filtroSelecionado ? (
         <View style={styles.tag}>
-          <Text>{filtroSelecionado}</Text>
+          <Text style={{ fontFamily: 'MontserratMedium' }}>{filtroSelecionado}</Text>
         </View>
       ) : null}
 
-      <TouchableOpacity style={styles.button} onPress={publicar}>
-        <Text style={{ color: "#fff" }}>Publicar</Text>
+      <TouchableOpacity style={styles.button} onPress={publicar} disabled={publicando}>
+        {publicando ? (
+          <ActivityIndicator color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Publicar</Text>
+        )}
       </TouchableOpacity>
     </View>
   );
 }
 
+export default CadastrarItem;
+
+function getPublishErrorMessage(error) {
+  if (error?.code === 'permission-denied') {
+    return 'O Firebase bloqueou o cadastro. Confirme se você está logado com email @discente.ifpe.edu.br e se as regras do Firestore foram publicadas.';
+  }
+
+  if (error?.code === 'unavailable') {
+    return 'Não foi possível conectar ao Firestore. Verifique sua internet e tente novamente.';
+  }
+
+  if (error?.code === 'not-found') {
+    return 'O banco Firestore ainda não foi criado no Firebase Console.';
+  }
+
+  return error?.message || 'Não foi possível publicar o item.';
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20 },
-  header: {
-    backgroundColor: "green",
-    color: "#fff",
-    padding: 15,
-    textAlign: "center",
-  },
   title: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "green",
+    fontFamily: 'MontserratBold',
+    color: colors.green_primary,
     marginVertical: 20,
   },
   imageBox: {
-    width: "100%",
+    width: '100%',
     height: 150,
-    backgroundColor: "#ddd",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#ddd',
+    justifyContent: 'center',
+    alignItems: 'center',
     borderRadius: 20,
   },
   preview: {
-    width: "100%",
-    height: "100%",
+    width: '100%',
+    height: '100%',
     borderRadius: 20,
   },
   filterTitle: {
     fontSize: 26,
-    fontWeight: "bold",
-    color: "green",
+    fontFamily: 'MontserratBold',
+    color: colors.green_primary,
     marginTop: 20,
   },
   filterContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 10,
     marginTop: 20,
   },
   filterButton: {
-    backgroundColor: "#ddd",
+    backgroundColor: '#ddd',
     padding: 10,
     borderRadius: 8,
   },
   filterSelected: {
     borderWidth: 2,
-    borderColor: "green",
+    borderColor: colors.green_primary,
   },
   input: {
-    borderWidth: 1,
+    borderWidth: 2,
     marginTop: 20,
     padding: 10,
+    borderRadius: 10,
+    borderColor: colors.green_primary,
+    fontFamily: 'MontserratMedium',
+  },
+  textArea: {
+    borderRadius: 10,
+    minHeight: 80,
+    textAlignVertical: 'top',
   },
   tag: {
-    backgroundColor: "#ddd",
+    backgroundColor: '#ddd',
     padding: 10,
-    alignSelf: "flex-start",
+    alignSelf: 'flex-start',
     marginTop: 20,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   button: {
-    backgroundColor: "green",
+    backgroundColor: colors.green_primary,
     padding: 15,
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 30,
+    minHeight: 50,
+    justifyContent: 'center',
+    borderRadius: 15,
+  },
+  buttonText: {
+    color: '#fff',
+    fontFamily: 'MontserratBold',
   },
 });

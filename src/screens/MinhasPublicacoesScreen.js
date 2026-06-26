@@ -1,64 +1,76 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
+  ActivityIndicator,
   FlatList,
   Image,
-  StyleSheet,
   SafeAreaView,
+  StyleSheet,
+  Text,
   TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
+import { onAuthStateChanged } from "firebase/auth";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
+import { auth, db } from "../utils/firebase.js";
+import {
+  getDateMillis,
+  normalizePublicacao,
+  PUBLICACOES_COLLECTION,
+} from "../services/publicacoes.js";
 
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useIsFocused } from "@react-navigation/native"; 
-import { auth } from "../firebase/firebaseConfig";
-
-export default function MinhasPublicacoes({ navigation, route }) {
+function MinhasPublicacoes({ navigation }) {
+  const [currentUser, setCurrentUser] = useState(auth.currentUser);
   const [publicacoes, setPublicacoes] = useState([]);
-  const isFocused = useIsFocused();
+  const [loading, setLoading] = useState(true);
 
-  const primeiraLetraUser = auth.currentUser?.email ? auth.currentUser.email.charAt(0).toUpperCase() : "?";
+  const primeiraLetraUser = currentUser?.email ? currentUser.email.charAt(0).toUpperCase() : "?";
 
   useEffect(() => {
-    async function gerenciarDados() {
-      try {
-        if (route?.params?.novaPublicacao) {
-          const dadosExistentes = await AsyncStorage.getItem("@publicacoes");
-          let listaAtual = dadosExistentes ? JSON.parse(dadosExistentes) : [];
-
-          const existe = listaAtual.some(item => item.id === route.params.novaPublicacao.id);
-          
-          if (!existe) {
-            listaAtual = [route.params.novaPublicacao, ...listaAtual];
-            await AsyncStorage.setItem("@publicacoes", JSON.stringify(listaAtual));
-          }
-          
-          // Limpa o parâmetro para não reinserir em re-renders
-          navigation.setParams({ novaPublicacao: undefined });
-          setPublicacoes(listaAtual);
-          return;
-        }
-
-        if (isFocused) {
-          const dados = await AsyncStorage.getItem("@publicacoes");
-          if (dados) {
-            setPublicacoes(JSON.parse(dados));
-          }
-        }
-      } catch (e) {
-        console.log("Erro ao gerenciar publicações:", e);
+    return onAuthStateChanged(auth, (user) => {
+      setCurrentUser(user);
+      if (!user) {
+        setPublicacoes([]);
+        setLoading(false);
       }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser) {
+      return undefined;
     }
 
-    gerenciarDados();
-  }, [isFocused, route?.params?.novaPublicacao]);
+    setLoading(true);
 
-  // FUNÇÃO DE AJUSTE PARA WEB GRID: Cria item invisível se a lista for ímpar
+    const minhasPublicacoesQuery = query(
+      collection(db, PUBLICACOES_COLLECTION),
+      where("userId", "==", currentUser.uid)
+    );
+
+    return onSnapshot(
+      minhasPublicacoesQuery,
+      (snapshot) => {
+        const items = snapshot.docs
+          .map((docSnapshot) => normalizePublicacao(docSnapshot, PUBLICACOES_COLLECTION))
+          .sort((a, b) => getDateMillis(b.createdAt) - getDateMillis(a.createdAt));
+
+        setPublicacoes(items);
+        setLoading(false);
+      },
+      (error) => {
+        console.log("Erro ao carregar publicações:", error);
+        setLoading(false);
+      }
+    );
+  }, [currentUser]);
+
+  const data = useMemo(() => formatData([...publicacoes], 2), [publicacoes]);
+
   function formatData(dataList, numColumns) {
     const numberOfFullRows = Math.floor(dataList.length / numColumns);
-    let numberOfElementsLastRow = dataList.length - (numberOfFullRows * numColumns);
-    
+    let numberOfElementsLastRow = dataList.length - numberOfFullRows * numColumns;
+
     while (numberOfElementsLastRow !== numColumns && numberOfElementsLastRow !== 0) {
       dataList.push({ id: `blank-${numberOfElementsLastRow}`, empty: true });
       numberOfElementsLastRow++;
@@ -66,29 +78,40 @@ export default function MinhasPublicacoes({ navigation, route }) {
     return dataList;
   }
 
+  function renderEmptyState() {
+    if (loading) {
+      return (
+        <View style={styles.emptyBox}>
+          <ActivityIndicator color="#009933" />
+          <Text style={styles.emptyText}>Carregando publicações...</Text>
+        </View>
+      );
+    }
+
+    if (!currentUser) {
+      return (
+        <TouchableOpacity style={styles.loginPrompt} onPress={() => navigation.navigate("Login")}>
+          <Text style={styles.emptyText}>Entre na sua conta para ver suas publicações.</Text>
+        </TouchableOpacity>
+      );
+    }
+
+    return <Text style={styles.emptyText}>Nenhum item publicado ainda.</Text>;
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      
-      {/*  Header */}
       <View style={styles.topAppBar}>
         <View style={styles.boxIconContainer}>
           <Text style={styles.boxIconEmoji}>📦</Text>
         </View>
 
         <View style={styles.searchBarContainer}>
-          <TextInput 
-            style={styles.searchBarInput} 
-            placeholder=""
-            editable={false} 
-          />
+          <TextInput style={styles.searchBarInput} placeholder="" editable={false} />
           <Text style={styles.searchIconEmoji}>🔍</Text>
         </View>
 
-        {/* Redireciona para a PerfilScreen */}
-        <TouchableOpacity 
-          style={styles.avatarButton} 
-          onPress={() => navigation.navigate('Perfil')}
-        >
+        <TouchableOpacity style={styles.avatarButton} onPress={() => navigation.navigate("Perfil")}>
           <View style={styles.avatarCircle}>
             <Text style={styles.avatarText}>{primeiraLetraUser}</Text>
           </View>
@@ -96,14 +119,11 @@ export default function MinhasPublicacoes({ navigation, route }) {
       </View>
 
       <View style={styles.container}>
-        
-        {/* 2. Título Central da Tela */}
         <Text style={styles.screenTitle}>Minhas Publicações</Text>
 
-        {/* 3. Abas / Botões de Navegação (Mural e Minhas Publicações) */}
         <View style={styles.tabsRow}>
           <View style={styles.leftTabs}>
-            <TouchableOpacity style={styles.muralTabButton}>
+            <TouchableOpacity style={styles.muralTabButton} onPress={() => navigation.navigate("Home")}>
               <Text style={styles.muralTabButtonText}>Mural</Text>
             </TouchableOpacity>
 
@@ -112,22 +132,20 @@ export default function MinhasPublicacoes({ navigation, route }) {
             </TouchableOpacity>
           </View>
 
-          {/* Botão de Adicionar (+) alinhado à direita dos botões */}
           <TouchableOpacity
             style={styles.plusButton}
-            onPress={() => navigation.navigate("CadastrarItem")}
+            onPress={() => navigation.navigate(currentUser ? "CadastrarItem" : "Login")}
           >
             <Text style={styles.plus}>+</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Lista de Itens */}
         <FlatList
-          data={formatData([...publicacoes], 2)} 
+          data={data}
           keyExtractor={(item) => String(item.id)}
-          numColumns={2} 
-          columnWrapperStyle={styles.row} 
-          contentContainerStyle={{ paddingBottom: 20 }}
+          numColumns={2}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={{ paddingBottom: 20, flexGrow: 1 }}
           renderItem={({ item }) => {
             if (item.empty) {
               return <View style={[styles.card, styles.cardInvisible]} />;
@@ -137,9 +155,7 @@ export default function MinhasPublicacoes({ navigation, route }) {
               <TouchableOpacity
                 style={styles.card}
                 activeOpacity={0.7}
-                onPress={() => {
-                  navigation.navigate("EditarItem", { item: { ...item } });
-                }}
+                onPress={() => navigation.navigate("EditarItem", { item })}
               >
                 <View style={styles.imageContainer}>
                   {item.imageUrl ? (
@@ -162,14 +178,14 @@ export default function MinhasPublicacoes({ navigation, route }) {
               </TouchableOpacity>
             );
           }}
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Nenhum item publicado ainda.</Text>
-          }
+          ListEmptyComponent={renderEmptyState}
         />
       </View>
     </SafeAreaView>
   );
 }
+
+export default MinhasPublicacoes;
 
 const styles = StyleSheet.create({
   safeArea: {
@@ -291,14 +307,14 @@ const styles = StyleSheet.create({
   },
   row: {
     flex: 1,
-    justifyContent: "space-between", 
+    justifyContent: "space-between",
     marginBottom: 15,
   },
   card: {
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#000", 
-    flex: 0.48, 
+    borderColor: "#000",
+    flex: 0.48,
     padding: 8,
   },
   cardInvisible: {
@@ -308,7 +324,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: "100%",
     height: 120,
-    backgroundColor: "#bbb", 
+    backgroundColor: "#bbb",
     marginBottom: 8,
   },
   image: {
@@ -333,13 +349,22 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
     color: "#000",
-    textTransform: "uppercase", 
+    textTransform: "uppercase",
     marginBottom: 5,
   },
   itemDescription: {
     fontSize: 12,
     color: "#333",
     lineHeight: 16,
+  },
+  emptyBox: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingTop: 40,
+  },
+  loginPrompt: {
+    paddingTop: 40,
   },
   emptyText: {
     textAlign: "center",
