@@ -2,13 +2,13 @@ import { StatusBar } from "expo-status-bar";
 import * as React from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { colors } from '../components/colors.js';
+import { auth } from "../utils/firebase.js";
 
-function registerScreen({ navigation }) {
+function CadastroScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
-    const auth = getAuth();
     const registerUser = () => {
         const emailLimpo = email.trim().toLowerCase();
         if (!emailLimpo.endsWith('@discente.ifpe.edu.br')) {
@@ -59,7 +59,7 @@ function registerScreen({ navigation }) {
     </View>
     );
 }
-export default registerScreen;
+export default CadastroScreen;
 
 const styles = StyleSheet.create({
     container: {

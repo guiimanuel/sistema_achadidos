@@ -8,12 +8,12 @@ import {
     StyleSheet,
 } from "react-native";
 import { useState } from "react";
-import { getAuth, sendPasswordResetEmail } from "firebase/auth";
+import { sendPasswordResetEmail } from "firebase/auth";
 import { colors } from '../components/colors.js';
+import { auth } from "../utils/firebase.js";
 
-function alterarSenhaScreen({ navigation }) {
+function AlterarSenhaScreen({ navigation }) {
     const [email, setEmail] = useState("");
-    const auth = getAuth();
     const recuperarSenha = () => {
         if (!email) {
             alert("Digite seu e-mail.");
@@ -60,7 +60,7 @@ function alterarSenhaScreen({ navigation }) {
     );
 }
 
-export default alterarSenhaScreen;
+export default AlterarSenhaScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,

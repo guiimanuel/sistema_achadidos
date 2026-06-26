@@ -2,12 +2,12 @@ import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { colors } from '../components/colors.js';
-function loginScreen({ navigation }) {
+import { auth } from "../utils/firebase.js";
+function LoginScreen({ navigation }) {
     const [email, setEmail] = useState('');
     const [senha, setSenha] = useState('');
-    const auth = getAuth();
 
     const signInUser = () => {
         signInWithEmailAndPassword(auth, email, senha)
@@ -27,7 +27,7 @@ function loginScreen({ navigation }) {
 
             <Image
                 style={styles.image}
-                source={require('../../assets/images/caixa.png')}
+                source={require('../assets/images/caixa.png')}
             />
             <Text style={styles.title}>BEM VINDO</Text>
             
@@ -63,7 +63,7 @@ function loginScreen({ navigation }) {
                 </Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('AlterarSenhaScreen')}>
+            <TouchableOpacity onPress={() => navigation.navigate('AlterarSenha')}>
                 <Text style={styles.link}>Esqueceu a senha? {" "}
                 <Text style={styles.link2}>Alterar</Text>
                 </Text>
@@ -71,11 +71,11 @@ function loginScreen({ navigation }) {
         </View>
     );
 }
-export default loginScreen;
+export default LoginScreen;
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: white_background,
+        backgroundColor: colors.white_background,
         flex: 1,
         justifyContent: 'center',
         padding: 65
