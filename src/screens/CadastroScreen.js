@@ -1,41 +1,41 @@
 import { StatusBar } from "expo-status-bar";
-import * as React from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
-import { useState } from "react";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { auth } from "../firebase/firebaseConfig";
 
-function registerScreen({ navigation }) {
-  const [email, setEmail] = useState('');
-  const [senha, setSenha] = useState('');
-  const auth = getAuth();
+export default function RegisterScreen({ navigation }) {
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
 
   const registerUser = () => {
+    const emailLimpo = email.trim().toLowerCase();
 
-  const emailLimpo = email.trim().toLowerCase();
+    if (!emailLimpo.endsWith("@discente.ifpe.edu.br")) {
+      Alert.alert("Erro", "Use apenas e-mail institucional");
+      return;
+    }
 
-  if (!emailLimpo.endsWith('@discente.ifpe.edu.br')) {
-    alert('É permitido apenas e-mail institucional (@discente.ifpe.edu.br)');
-    return;
-  }
-
-  createUserWithEmailAndPassword(auth, emailLimpo, senha)
-    .then((userCredential) => {
-      navigation.goBack();
-    })
-    .catch((error) => {
-      console.log(error.code, error.message);
-      alert('Erro ao cadastrar usuário');
-    });
-};
+    createUserWithEmailAndPassword(auth, emailLimpo, senha)
+      .then(() => {
+        Alert.alert("Sucesso", "Conta criada!");
+        navigation.goBack();
+      })
+      .catch((error) => {
+        console.log(error.code);
+        Alert.alert("Erro", "Não foi possível cadastrar");
+      });
+  };
 
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
 
       <Text style={styles.title}>CRIAR CONTA</Text>
-            <Text style={styles.title1}>Preencha os dados pra se cadastrar</Text>
 
-      <Text style={styles.title3}>*Apenas email institucional</Text>
+      <Text style={styles.subtitle}>Preencha os dados pra se cadastrar</Text>
+
+      <Text style={styles.warning}>*Apenas email institucional</Text>
 
       <TextInput
         style={styles.input}
@@ -51,7 +51,6 @@ function registerScreen({ navigation }) {
         onChangeText={setSenha}
         placeholder="Nova senha..."
         placeholderTextColor="#8a8a8a"
-
         secureTextEntry
       />
 
@@ -62,86 +61,63 @@ function registerScreen({ navigation }) {
       <TouchableOpacity onPress={() => navigation.goBack()}>
         <Text style={styles.link}>Voltar para login</Text>
       </TouchableOpacity>
-
     </View>
-
   );
-
-   
 }
-
-
-
-export default registerScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-        backgroundColor: '#fcfaf7',
-
-    justifyContent: 'center',
-    padding: 65,
-
+    backgroundColor: "#fcfaf7",
+    justifyContent: "center",
+    padding: 65
   },
 
   title: {
-    textAlign: 'center',
-    color: '#059600',
+    textAlign: "center",
+    color: "#059600",
     fontSize: 35,
-    marginBottom: 10,
-    fontWeight: 'bold',
-
-  
+    fontWeight: "bold"
   },
 
-   title1: {
-    textAlign: 'center',
-    color: '#059600',
+  subtitle: {
+    textAlign: "center",
+    color: "#059600",
     fontSize: 17,
-    marginBottom: 100,
-    
-    
+    marginBottom: 80
   },
 
-  title3: {
-    justifyContent: 'center',
-    color: '#8a8a8a',
+  warning: {
+    color: "#8a8a8a",
     fontSize: 14,
-        marginBottom: 2,
-
-    
-    
-    
+    marginBottom: 10
   },
-
 
   input: {
-    backgroundColor: '#ffffff',
+    backgroundColor: "#fff",
     padding: 15,
     marginBottom: 10,
     borderRadius: 8,
-    borderColor: '#171f35',
     borderWidth: 1,
+    borderColor: "#171f35"
   },
 
   button: {
-    backgroundColor: '#059600',
+    backgroundColor: "#059600",
     padding: 12,
-    marginBottom: 1,
     marginTop: 30,
-    borderRadius: 8,
+    borderRadius: 8
   },
 
   buttonText: {
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold"
   },
 
   link: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 10,
-    color: '#059600'
+    color: "#059600"
   }
 });
