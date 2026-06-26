@@ -1,0 +1,56 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function institutionalUser() {
+      return signedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email.matches('.*@discente[.]ifpe[.]edu[.]br$');
+    }
+
+    function validItemData() {
+      return request.resource.data.keys().hasOnly([
+          'titulo',
+          'descricao',
+          'filtro',
+          'categoria',
+          'imageUrl',
+          'userId',
+          'userEmail',
+          'createdAt',
+          'updatedAt'
+        ])
+        && request.resource.data.titulo is string
+        && request.resource.data.titulo.size() > 0
+        && request.resource.data.descricao is string
+        && request.resource.data.filtro is string
+        && request.resource.data.categoria is string
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() < 800000
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userEmail == request.auth.token.email;
+    }
+
+    function ownsExistingItem() {
+      return signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /itens/{itemId} {
+      allow read: if true;
+      allow create: if institutionalUser() && validItemData();
+      allow update: if institutionalUser() && ownsExistingItem() && validItemData();
+      allow delete: if institutionalUser() && ownsExistingItem();
+    }
+
+    match /item/{itemId} {
+      allow read: if true;
+      allow create: if false;
+      allow update: if institutionalUser() && ownsExistingItem() && validItemData();
+      allow delete: if institutionalUser() && ownsExistingItem();
+    }
+  }
+}

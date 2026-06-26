@@ -1,16 +1,19 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { getAuth, signOut } from "firebase/auth";
+import { signOut } from 'firebase/auth';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { auth } from '../utils/firebase.js';
+import { colors } from '../components/colors.js';
 
 function PerfilScreen({ navigation }) {
-  const auth = getAuth();
-
   const logoutUser = () => {
     signOut(auth)
       .then(() => {
-        navigation.navigate('login');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        });
       })
       .catch((error) => {
         alert('Erro ao sair');
@@ -25,47 +28,31 @@ function PerfilScreen({ navigation }) {
       {/* HEADER SUPERIOR VERDE */}
       <View style={styles.header}>
         {/* Botão para voltar à tela anterior facilmente */}
-        <TouchableOpacity 
-          style={styles.backButton} 
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <AntDesign name="arrowleft" size={24} color="#fff" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>
-          Meu Perfil
-        </Text>
-        
+        <Text style={styles.headerTitle}>Meu Perfil</Text>
+
         {/* View vazia apenas para centralizar o título perfeitamente com o botão de voltar */}
         <View style={{ width: 24 }} />
       </View>
 
       {/* CONTEÚDO CENTRAL */}
       <View style={styles.container}>
-        <Image
-          style={styles.image}
-          source={require('../../assets/images/fotoperfil.png')}
-        />
+        <Image style={styles.image} source={require('../assets/images/fotoperfil.png')} />
 
-        <Text style={styles.emailText}>
-          {auth.currentUser?.email || "Usuário não logado"}
-        </Text>
+        <Text style={styles.emailText}>{auth.currentUser?.email || 'Usuário não logado'}</Text>
 
         {/* BOTÃO ALTERAR SENHA */}
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate('AlterarSenhaScreen')}
-        >
+        <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AlterarSenha')}>
           <Text style={styles.buttonText}>
-            <AntDesign name="lock" size={21} color="#009933" /> Alterar Senha
+            <AntDesign name="lock" size={21} color={colors.green_primary} /> Alterar Senha
           </Text>
         </TouchableOpacity>
 
         {/* BOTÃO LOGOUT */}
-        <TouchableOpacity
-          style={[styles.button, styles.logoutButton]}
-          onPress={logoutUser}
-        >
+        <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={logoutUser}>
           <Text style={styles.logoutButtonText}>
             <AntDesign name="logout" size={20} color="#be0000" /> Logout
           </Text>
@@ -80,10 +67,10 @@ export default PerfilScreen;
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
-    backgroundColor: '#F3F6FB',
+    backgroundColor: colors.white_background,
   },
   header: {
-    backgroundColor: '#009933', // Verde padrão do seu App Bar
+    backgroundColor: colors.green_primary, // Verde padrão do seu App Bar
     paddingTop: 50,
     paddingHorizontal: 20,
     paddingBottom: 25,
@@ -121,7 +108,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
     borderWidth: 3,
-    borderColor: '#009933', // Borda verde combinando com a logo
+    borderColor: colors.green_primary, // Borda verde combinando com a logo
   },
   button: {
     backgroundColor: '#fff',
@@ -129,15 +116,14 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 15,
     borderRadius: 8,
-    borderColor: "#c0c0c0",
-    shadowColor: "#000",
+    borderColor: '#c0c0c0',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     elevation: 2,
   },
   buttonText: {
-    color: '#009933', // Texto verde
+    color: colors.green_primary, // Texto verde
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 16,
