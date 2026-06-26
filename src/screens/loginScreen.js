@@ -1,52 +1,36 @@
-import * as React from 'react';
-import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import * as React from "react";
+import { StatusBar } from "expo-status-bar";
+import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { useState } from "react";
+import { auth } from "../firebase/firebaseConfig";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
-function loginScreen({ navigation }) {
+export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const auth = getAuth();
+
 
   const signInUser = () => {
     signInWithEmailAndPassword(auth, email, senha)
       .then((userCredential) => {
-        const user = userCredential.user;
-        navigation.navigate('Convercao', user);
+        navigation.navigate('MinhasPublicacoes', userCredential.user);
       })
-      .catch(() => {
-        alert('Email ou senha inválidos!');
-      });
+      .catch(() => alert('Email ou senha inválidos!'));
   };
 
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
 
-
-      <Image
-        style={styles.image}
-        source={require('../../assets/images/caixa.png')}
-      />
+      <Image style={styles.image} source={require('../../assets/images/caixa.png')} />
 
       <Text style={styles.title}>BEM VINDO</Text>
-      <Text style={styles.title2}></Text>
-
-            <Text style={styles.titlemini}>Faça o seu login com{" "}
-    <Text style={styles.titlemini2}>email e senha</Text></Text>
-
-
-
 
       <TextInput
         placeholder="Email institucional..."
         style={styles.input}
-        keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
-        placeholderTextColor="#8a8a8a"
-
       />
 
       <TextInput
@@ -55,31 +39,23 @@ function loginScreen({ navigation }) {
         style={styles.input}
         value={senha}
         onChangeText={setSenha}
-        placeholderTextColor="#8a8a8a"
-
       />
 
       <TouchableOpacity style={styles.button} onPress={signInUser}>
         <Text style={styles.buttonText}>Login</Text>
       </TouchableOpacity>
 
-      
-        
       <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
-        <Text style={styles.link}>Ainda não tem conta? {" "}
-    <Text style={styles.link2}>Cadastre-se</Text></Text>
+        <Text>Cadastre-se</Text>
       </TouchableOpacity>
 
        <TouchableOpacity onPress={() => navigation.navigate('AlterarSenhaScreen')}>
         <Text style={styles.link}>Esqueceu a senha? {" "}
     <Text style={styles.link2}>Alterar</Text></Text>
       </TouchableOpacity>
-
     </View>
   );
 }
-
-export default loginScreen;
 
 const styles = StyleSheet.create({
   container: {
