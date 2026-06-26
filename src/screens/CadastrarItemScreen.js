@@ -43,16 +43,19 @@ function CadastrarItem({ navigation, route }) {
 
     try {
       setPublicando(true);
-      await criarPublicacao({
+      const publicacaoRef = await criarPublicacao({
         titulo,
         descricao,
         filtro: filtroSelecionado,
         imagem: imagemRecebida,
       });
 
-      Alert.alert('Publicado', 'Item cadastrado com sucesso.', [
-        { text: 'OK', onPress: () => navigation.navigate('Home') },
-      ]);
+      console.log('Item publicado com ID:', publicacaoRef.id);
+      Alert.alert('Publicado', 'Item cadastrado com sucesso.');
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home', params: { publishedItemId: publicacaoRef.id } }],
+      });
     } catch (error) {
       console.log('Erro ao publicar item:', error);
       Alert.alert('Erro ao publicar', getPublishErrorMessage(error));
