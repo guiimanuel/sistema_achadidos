@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import {
   ActivityIndicator,
-  Alert,
   Animated,
   FlatList,
   Image,
@@ -15,7 +14,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { colors } from '../components/colors.js';
 import { auth, db } from '../utils/firebase.js';
@@ -179,7 +178,6 @@ function belongsToUser(item, user) {
 function HomeScreen({ navigation }) {
   const { width } = useWindowDimensions();
   const [currentUser, setCurrentUser] = useState(null);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
@@ -192,11 +190,11 @@ function HomeScreen({ navigation }) {
   const filterOptionsProgress = React.useRef(new Animated.Value(0)).current;
   const [tabLayouts, setTabLayouts] = useState({});
   const [showFilterOptions, setShowFilterOptions] = useState(false);
+  const primeiraLetraUser = currentUser?.email ? currentUser.email.charAt(0).toUpperCase() : '?';
 
   useEffect(() => {
     return onAuthStateChanged(auth, (user) => {
       setCurrentUser(user);
-      setProfileMenuOpen(false);
       if (!user) {
         setActiveTab('mural');
       }
@@ -321,16 +319,28 @@ function HomeScreen({ navigation }) {
     });
 
     allItems.forEach((item) => {
-      [item.category, item.title].forEach((value) => {
-        const label = String(value || '').trim();
-        if (label) {
-          options.set(normalizeText(label), label);
-        }
-      });
+      const label = String(item.category || '').trim();
+      if (label) {
+        options.set(normalizeText(label), label);
+      }
     });
 
     return Array.from(options.values());
   }, [allItems]);
+
+  useEffect(() => {
+    if (!activeFilter) {
+      return;
+    }
+
+    const hasActiveFilter = filterOptions.some(
+      (filter) => normalizeText(filter) === normalizeText(activeFilter)
+    );
+
+    if (!hasActiveFilter) {
+      setActiveFilter('');
+    }
+  }, [activeFilter, filterOptions]);
 
   const filteredItems = React.useMemo(() => {
     const normalizedSearch = normalizeText(search);
@@ -339,7 +349,8 @@ function HomeScreen({ navigation }) {
     return allItems.filter((item) => {
       const matchesTab = activeTab === 'mural' || belongsToUser(item, currentUser);
       const matchesSearch = !normalizedSearch || item.searchText.includes(normalizedSearch);
-      const matchesFilter = !normalizedFilter || item.searchText.includes(normalizedFilter);
+      const matchesFilter =
+        !normalizedFilter || normalizeText(item.category).includes(normalizedFilter);
 
       return matchesTab && matchesSearch && matchesFilter;
     });
@@ -355,22 +366,9 @@ function HomeScreen({ navigation }) {
     allItems.length === 0 &&
     Object.keys(collectionErrors).length === ITEM_COLLECTIONS.length;
 
-  function handleSignOut() {
-    const auth = getAuth();
-    signOut(auth)
-      .then(() => {
-        console.log('Usuário deslogado com sucesso!');
-        navigation.navigate('login');
-      })
-      .catch((error) => {
-        console.error('Erro ao sair da conta:', error);
-        Alert.alert('Erro ao sair da conta!', 'Tente novamente.');
-      });
-  }
-
   function handleAuthPress() {
     if (currentUser) {
-      setProfileMenuOpen((open) => !open);
+      navigation.navigate('Perfil');
       return;
     }
     navigation.navigate('Login');
@@ -552,13 +550,11 @@ function HomeScreen({ navigation }) {
   }
 
   function renderItem({ item }) {
-    const canEdit = belongsToUser(item, currentUser) && item.sourceCollection === 'itens';
-
     return (
       <Pressable
         style={[styles.card, { width: cardWidth }]}
-        disabled={!canEdit}
-        onPress={() => navigation.navigate('EditarItem', { item })}
+        accessibilityRole="button"
+        onPress={() => navigation.navigate('ItemFullScreen', { item })}
       >
         <View style={styles.cardImageWrap}>
           <Image
@@ -606,7 +602,7 @@ function HomeScreen({ navigation }) {
             onPress={handleAuthPress}
           >
             {currentUser ? (
-              <Ionicons name="person" size={32} color="#4f6255" />
+              <Text style={styles.profileInitial}>{primeiraLetraUser}</Text>
             ) : (
               <>
                 <Ionicons name="log-in-outline" size={22} color={colors.green_primary} />
@@ -637,12 +633,6 @@ function HomeScreen({ navigation }) {
           ) : null}
         </View>
 
-        {currentUser && profileMenuOpen ? (
-          <Pressable style={styles.logoutPopover} onPress={handleSignOut}>
-            <Ionicons name="log-out-outline" size={23} color="#7b2b2b" />
-            <Text style={styles.logoutText}>Sair da Conta</Text>
-          </Pressable>
-        ) : null}
       </View>
 
       <FlatList
@@ -721,9 +711,17 @@ const styles = StyleSheet.create({
     height: 52,
     borderRadius: 26,
     backgroundColor: '#ffffff',
+    borderWidth: 2,
+    borderColor: '#d8ded4',
     alignItems: 'center',
     justifyContent: 'center',
     boxShadow: '0 6px 14px rgba(0, 0, 0, 0.12)',
+  },
+  profileInitial: {
+    color: colors.green_primary,
+    fontSize: 21,
+    fontWeight: '800',
+    fontFamily: 'MontserratBold',
   },
   loginButton: {
     height: 44,
@@ -741,25 +739,6 @@ const styles = StyleSheet.create({
     color: colors.green_primary,
     fontSize: 17,
     fontWeight: '800',
-    fontFamily: 'MontserratSemiBold',
-  },
-  logoutPopover: {
-    position: 'absolute',
-    top: 76,
-    right: 18,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    boxShadow: '0 4px 10px rgba(0, 0, 0, 0.16)',
-    zIndex: 10,
-  },
-  logoutText: {
-    color: '#9f1d1d',
-    fontSize: 15,
     fontFamily: 'MontserratSemiBold',
   },
   listContent: {
