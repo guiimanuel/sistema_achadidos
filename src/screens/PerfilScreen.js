@@ -2,7 +2,7 @@ import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { signOut } from 'firebase/auth';
-import AntDesign from '@expo/vector-icons/AntDesign';
+import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { auth } from '../utils/firebase.js';
 import { colors } from '../components/colors.js';
 
@@ -29,7 +29,7 @@ function PerfilScreen({ navigation }) {
       <View style={styles.header}>
         {/* Botão para voltar à tela anterior facilmente */}
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <AntDesign name="arrowleft" size={24} color="#fff" />
+          <Ionicons name="arrow-back" size={28} color="#ffffff" />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Meu Perfil</Text>
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   backButton: {
-    padding: 5,
+    paddingLeft: 5,
   },
   headerTitle: {
     color: '#fff',
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     padding: 14,
     marginBottom: 15,
     borderRadius: 8,
-    borderColor: '#c0c0c0',
+    borderColor: colors.green_primary,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,

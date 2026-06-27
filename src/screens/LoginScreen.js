@@ -25,7 +25,7 @@ function LoginScreen({ navigation }) {
         alert('Email ou senha inválidos!');
       });
   };
-
+AAAAA
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
