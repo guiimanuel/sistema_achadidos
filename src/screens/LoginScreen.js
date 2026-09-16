@@ -6,17 +6,10 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../components/colors.js';
 import { auth } from '../utils/firebase.js';
-import { useExpoFonts } from '../components/expoFonts.js';
 
 function LoginScreen({ navigation }) {
-  const { fontsLoaded } = useExpoFonts();
-
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-
-  if (!fontsLoaded) {
-    return null;
-  }
 
   const signInUser = async () => {
     if (!email.trim() || !senha.trim()) {

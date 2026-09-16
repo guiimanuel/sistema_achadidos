@@ -4,12 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import {
-  useFonts,
-  Montserrat_600SemiBold,
-  Montserrat_700Bold,
-  Montserrat_800ExtraBold
-} from '@expo-google-fonts/montserrat';
+import { useExpoFonts } from './src/components/expoFonts';
 
 import LoginScreen from './src/screens/LoginScreen';
 import CadastroScreen from './src/screens/CadastroScreen';
@@ -53,12 +48,11 @@ const renderHeader = (title = 'ACHADOS E PERDIDOS') => (
 );
 
 function App() {
-  // Carregamento direto das fontes mapeadas com os exatos nomes usados nos estilos
-  const [fontsLoaded] = useFonts({
-    MontserratSemiBold: Montserrat_600SemiBold,
-    MontserratBold: Montserrat_700Bold,
-    MontserratExtraBold: Montserrat_800ExtraBold,
-  });
+  const { fontsLoaded, fontError } = useExpoFonts();
+
+  if (fontError) {
+    throw fontError;
+  }
 
   if (!fontsLoaded) {
     return (
