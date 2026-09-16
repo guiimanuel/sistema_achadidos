@@ -21,7 +21,7 @@ const notebookImage = require('../assets/images/caderno.png');
 const caseImage = require('../assets/images/estojo.png');
 const INSTITUTION_EMAIL = 'daee@jaboatao.ifpe.edu.br';
 
-// CREDENCIAIS DO EMAILJS
+// INFORMACOES DO EMAILJS
 const EMAILJS_SERVICE_ID = 'service_wuhafya';
 const EMAILJS_TEMPLATE_ID = 'template_vwyjd8c';
 const EMAILJS_PUBLIC_KEY = 'sf7es5fokN-JUdLiR';
@@ -277,7 +277,7 @@ function ItemFullScreen({ navigation, route }) {
         </View>
       </View>
 
-      {/* MODAL COM FORMULÁRIO OU TELA DE SUCESSO */}
+      
       <Modal
         animationType="fade"
         transparent={true}
