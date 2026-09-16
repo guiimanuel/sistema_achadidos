@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { auth } from '../utils/firebase.js';
@@ -65,7 +66,7 @@ function CadastrarItem({ navigation, route }) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.title}>Adicionar item</Text>
 
       <TouchableOpacity
@@ -127,7 +128,7 @@ function CadastrarItem({ navigation, route }) {
           <Text style={styles.buttonText}>Publicar</Text>
         )}
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 

@@ -220,7 +220,11 @@ function ItemFullScreen({ navigation, route }) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+        style={styles.container}> 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
@@ -384,7 +388,7 @@ function ItemFullScreen({ navigation, route }) {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
