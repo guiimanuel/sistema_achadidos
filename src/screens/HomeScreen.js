@@ -14,11 +14,11 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, onSnapshot } from 'firebase/firestore';
 import { colors } from '../components/colors.js';
 import { auth, db } from '../utils/firebase.js';
-import { useExpoFonts } from '../components/expoFonts.js';
 
 const ITEM_COLLECTIONS = ['itens', 'item'];
 const DEFAULT_FILTERS = ['Material escolar', 'Utensílio pessoal', 'Caderno', 'Garrafa', 'Celular'];
@@ -47,21 +47,11 @@ function firstValue(data, keys) {
 }
 
 function toMillis(value) {
-  if (!value) {
-    return 0;
-  }
-  if (typeof value.toMillis === 'function') {
-    return value.toMillis();
-  }
-  if (typeof value.toDate === 'function') {
-    return value.toDate().getTime();
-  }
-  if (typeof value.seconds === 'number') {
-    return value.seconds * 1000;
-  }
-  if (typeof value === 'number') {
-    return value < 10000000000 ? value * 1000 : value;
-  }
+  if (!value) return 0;
+  if (typeof value.toMillis === 'function') return value.toMillis();
+  if (typeof value.toDate === 'function') return value.toDate().getTime();
+  if (typeof value.seconds === 'number') return value.seconds * 1000;
+  if (typeof value === 'number') return value < 10000000000 ? value * 1000 : value;
   if (typeof value === 'string') {
     const trimmed = value.trim();
     const brDate = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
@@ -87,9 +77,7 @@ function pad(value) {
 
 function formatDate(value) {
   const millis = toMillis(value);
-  if (!millis) {
-    return '';
-  }
+  if (!millis) return '';
   const date = new Date(millis);
   return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(
     date.getHours()
@@ -149,15 +137,9 @@ function normalizeItem(docId, data, sourceCollection) {
 
 function getFallbackImage(item) {
   const text = normalizeText(`${item.title} ${item.category}`);
-  if (text.includes('garrafa')) {
-    return bottleImage;
-  }
-  if (text.includes('estojo')) {
-    return caseImage;
-  }
-  if (text.includes('caderno')) {
-    return notebookImage;
-  }
+  if (text.includes('garrafa')) return bottleImage;
+  if (text.includes('estojo')) return caseImage;
+  if (text.includes('caderno')) return notebookImage;
   return logoImage;
 }
 
@@ -169,13 +151,12 @@ function getImageSource(item) {
 }
 
 function belongsToUser(item, user) {
-  if (!user) {
-    return false;
-  }
+  if (!user) return false;
   return item.ownerId === user.uid || item.ownerEmail === user.email;
 }
 
 function HomeScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [currentUser, setCurrentUser] = useState(null);
   const [search, setSearch] = useState('');
@@ -199,7 +180,7 @@ function HomeScreen({ navigation }) {
         setActiveTab('mural');
       }
     });
-  }, [auth]);
+  }, []);
 
   useEffect(() => {
     const unsubscribers = ITEM_COLLECTIONS.map((collectionName) =>
@@ -239,14 +220,12 @@ function HomeScreen({ navigation }) {
     );
 
     return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, [db]);
+  }, []);
 
   useEffect(() => {
     const layout = tabLayouts[activeTab];
 
-    if (!layout) {
-      return;
-    }
+    if (!layout) return;
 
     Animated.parallel([
       Animated.timing(tabTranslateX, {
@@ -329,9 +308,7 @@ function HomeScreen({ navigation }) {
   }, [allItems]);
 
   useEffect(() => {
-    if (!activeFilter) {
-      return;
-    }
+    if (!activeFilter) return;
 
     const hasActiveFilter = filterOptions.some(
       (filter) => normalizeText(filter) === normalizeText(activeFilter)
@@ -570,7 +547,7 @@ function HomeScreen({ navigation }) {
           </Text>
         ) : null}
         <Text numberOfLines={1} style={styles.cardTitle}>
-          {item.title.toUpperCase()}
+          {item.title}
         </Text>
         <Text numberOfLines={5} style={styles.cardText}>
           {item.description || 'Sem descrição informada.'}
@@ -587,9 +564,9 @@ function HomeScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="light" backgroundColor={colors.green_primary} />
+      <StatusBar style="light" backgroundColor={colors.green_primary} translucent />
 
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: Math.max(insets.top + 12, 18) }]}>
         <View style={styles.topBarRow}>
           <View style={styles.logoSurface}>
             <Image source={logoImage} style={styles.logo} />
@@ -632,7 +609,6 @@ function HomeScreen({ navigation }) {
             </Pressable>
           ) : null}
         </View>
-
       </View>
 
       <FlatList
@@ -661,11 +637,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f6f7f2',
   },
   topBar: {
-    minHeight: 158,
     backgroundColor: colors.green_primary,
     gap: 14,
     paddingHorizontal: 18,
-    paddingTop: 18,
     paddingBottom: 18,
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 18,
@@ -686,7 +660,7 @@ const styles = StyleSheet.create({
   logo: {
     width: 150,
     height: 150,
-    marginTop: 25,
+    marginTop: 10,
     resizeMode: 'contain',
   },
   searchBox: {
@@ -697,7 +671,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 14,
-    boxShadow: '0 6px 14px rgba(0, 0, 0, 0.12)',
+    elevation: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 7,
   },
   searchInput: {
     flex: 1,
@@ -705,6 +683,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 0,
     fontFamily: 'MontserratSemiBold',
+    includeFontPadding: false,
   },
   profileButton: {
     width: 52,
@@ -715,13 +694,17 @@ const styles = StyleSheet.create({
     borderColor: '#d8ded4',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 6px 14px rgba(0, 0, 0, 0.12)',
+    elevation: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 7,
   },
   profileInitial: {
     color: colors.green_primary,
     fontSize: 21,
-    fontWeight: '800',
-    fontFamily: 'MontserratBold',
+    fontFamily: 'MontserratExtraBold',
+    includeFontPadding: false,
   },
   loginButton: {
     height: 44,
@@ -733,13 +716,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 6,
     paddingHorizontal: 14,
-    boxShadow: '0 6px 14px rgba(0, 0, 0, 0.12)',
+    elevation: 4,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 7,
   },
   loginText: {
     color: colors.green_primary,
     fontSize: 17,
-    fontWeight: '800',
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   listContent: {
     paddingBottom: 32,
@@ -753,10 +740,10 @@ const styles = StyleSheet.create({
   title: {
     color: colors.green_primary,
     fontSize: 27,
-    fontWeight: '900',
     textAlign: 'center',
     lineHeight: 32,
     fontFamily: 'MontserratExtraBold',
+    includeFontPadding: false,
   },
   controlsCard: {
     backgroundColor: '#ffffff',
@@ -765,7 +752,11 @@ const styles = StyleSheet.create({
     borderColor: '#e1e6dc',
     padding: 12,
     gap: 12,
-    boxShadow: '0 6px 14px rgba(36, 51, 37, 0.08)',
+    elevation: 2,
+    shadowColor: '#243325',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 7,
   },
   filtersRow: {
     minHeight: 42,
@@ -794,11 +785,13 @@ const styles = StyleSheet.create({
   filterButtonText: {
     color: colors.green_primary,
     fontSize: 15,
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   filterButtonTextActive: {
     color: '#ffffff',
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   tabs: {
     flexDirection: 'row',
@@ -834,15 +827,10 @@ const styles = StyleSheet.create({
     flex: 1.38,
     minWidth: 170,
   },
-  tabActive: {
-    backgroundColor: colors.green_primary,
-  },
-  tabInactive: {
-    backgroundColor: 'transparent',
-  },
   tabText: {
     fontSize: 14,
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   tabTextActive: {
     color: '#ffffff',
@@ -863,7 +851,8 @@ const styles = StyleSheet.create({
   addItemButtonText: {
     color: '#ffffff',
     fontSize: 15,
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   activeFilterChip: {
     minHeight: 38,
@@ -881,6 +870,7 @@ const styles = StyleSheet.create({
     color: '#315a32',
     fontSize: 14,
     fontFamily: 'MontserratSemiBold',
+    includeFontPadding: false,
   },
   filterOptions: {
     flexDirection: 'row',
@@ -900,6 +890,7 @@ const styles = StyleSheet.create({
     color: '#48544a',
     fontSize: 13,
     fontFamily: 'MontserratSemiBold',
+    includeFontPadding: false,
   },
   cardRow: {
     justifyContent: 'space-between',
@@ -912,7 +903,11 @@ const styles = StyleSheet.create({
     borderColor: '#dfe4dc',
     backgroundColor: '#ffffff',
     padding: 12,
-    boxShadow: '0 5px 12px rgba(26, 38, 25, 0.08)',
+    elevation: 2,
+    shadowColor: '#1a2619',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
   },
   cardImageWrap: {
     width: '100%',
@@ -936,22 +931,26 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     overflow: 'hidden',
     fontSize: 11,
-    fontWeight: '800',
     paddingHorizontal: 8,
     paddingVertical: 4,
     marginBottom: 7,
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   cardTitle: {
     color: '#121a14',
-    fontSize: 16,
-    fontWeight: '900',
+    fontSize: 15,
     marginBottom: 6,
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   cardText: {
     color: '#2e352f',
     fontSize: 13,
     lineHeight: 17,
     flexGrow: 1,
+    fontFamily: 'MontserratRegular',
+    includeFontPadding: false,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -965,7 +964,8 @@ const styles = StyleSheet.create({
   cardDate: {
     color: '#6c7568',
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'MontserratRegular',
+    includeFontPadding: false,
   },
   emptyState: {
     minHeight: 260,
@@ -979,5 +979,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     textAlign: 'center',
     fontFamily: 'MontserratSemiBold',
+    includeFontPadding: false,
   },
 });

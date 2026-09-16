@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,23 +9,35 @@ import { auth } from '../utils/firebase.js';
 import { useExpoFonts } from '../components/expoFonts.js';
 
 function LoginScreen({ navigation }) {
-  const { fontsLoaded, fontError } = useExpoFonts();
-  if (!fontsLoaded) {
-    return null;
-  }
+  const { fontsLoaded } = useExpoFonts();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
-  const signInUser = () => {
-    signInWithEmailAndPassword(auth, email, senha)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        navigation.navigate('Home', user);
-      })
-      .catch(() => {
-        alert('Email ou senha inválidos!');
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  const signInUser = async () => {
+    if (!email.trim() || !senha.trim()) {
+      Alert.alert('Campos vazios', 'Por favor, preencha o e-mail e a senha.');
+      return;
+    }
+
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const user = userCredential.user;
+
+      // Passando apenas dados simples/serializáveis (evita o crash no APK)
+      navigation.navigate('Home', {
+        uid: user.uid,
+        email: user.email
       });
+
+    } catch (error) {
+      console.log('Erro de autenticação:', error);
+      Alert.alert('Erro ao entrar', 'E-mail ou senha inválidos.');
+    }
   };
 
   return (
@@ -51,6 +63,7 @@ function LoginScreen({ navigation }) {
         placeholder="Email institucional..."
         style={styles.input}
         keyboardType="email-address"
+        autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
         placeholderTextColor={colors.gray_placeholder}
@@ -90,7 +103,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.white_background,
     flex: 1,
-    justifyContent: 'center',
+    justify: 'center',
     padding: 65,
     position: 'relative',
   },
