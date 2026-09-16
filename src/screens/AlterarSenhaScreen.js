@@ -8,6 +8,7 @@ import {
     StyleSheet,
 } from "react-native";
 import { useState } from "react";
+
 import { sendPasswordResetEmail } from "firebase/auth";
 import { colors } from '../components/colors.js';
 import { auth } from "../utils/firebase.js";
@@ -34,7 +35,7 @@ function AlterarSenhaScreen({ navigation }) {
     return (
         <View style={styles.container}>
             <StatusBar style="auto" />
-        
+
             <Text style={styles.title}>ALTERAR SENHA</Text>
             <Text style={styles.subtitle}>
                 Digite o e-mail da sua conta para receber o link de recuperação.
@@ -48,7 +49,7 @@ function AlterarSenhaScreen({ navigation }) {
                 onChangeText={setEmail}
                 placeholderTextColor={colors.gray}
             />
-    
+
             <TouchableOpacity style={styles.button} onPress={recuperarSenha}>
                 <Text style={styles.buttonText}>Enviar E-mail</Text>
             </TouchableOpacity>
@@ -69,11 +70,8 @@ const styles = StyleSheet.create({
         backgroundColor: colors.white_background,
     },
     title: {
-        fontSize: 30,
-        fontWeight: "bold",
-        textAlign: "center",
-        color: colors.green_primary,
-        marginBottom: 20,
+        fontSize: 27,
+        fontFamily: 'MontserratExtraBold',
     },
     subtitle: {
         textAlign: "center",
