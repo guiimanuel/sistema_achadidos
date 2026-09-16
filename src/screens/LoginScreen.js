@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../components/colors.js';
 import { auth } from '../utils/firebase.js';
 import { useExpoFonts } from '../components/expoFonts.js';
@@ -42,6 +43,14 @@ function LoginScreen({ navigation }) {
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
+
+      {/* Botão de seta fixado no topo esquerdo */}
+      <TouchableOpacity 
+        style={styles.backButton} 
+        onPress={() => navigation.navigate('Home')}
+      >
+        <Ionicons name="arrow-back" size={28} color={colors.green_primary} />
+      </TouchableOpacity>
 
       <Image style={styles.image} source={require('../assets/images/caixa.png')} />
       <Text style={styles.title}>BEM VINDO!</Text>
@@ -96,6 +105,14 @@ const styles = StyleSheet.create({
     flex: 1,
     justify: 'center',
     padding: 65,
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: 50,
+    left: 25,
+    zIndex: 10,
+    padding: 8,
   },
   title: {
     fontSize: 30,
@@ -106,7 +123,7 @@ const styles = StyleSheet.create({
   },
   titlemini: {
     fontSize: 18,
-    marginBottom: 100,
+    marginBottom: 65,
     textAlign: 'center',
     color: colors.green_primary,
     fontFamily: 'MontserratMedium',
