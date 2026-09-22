@@ -4,6 +4,12 @@
     "slug": "system_achadidos",
     "icon": "./src/icons/icone.png",
     "version": "1.0.2",
+    "userInterfaceStyle": "light",
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#00000000",
+      "translucent": true
+    },
     "android": {
       "package": "com.systemachadidos",
       "icon": "./src/icons/mural-caixa.png",
@@ -12,7 +18,12 @@
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES"
       ],
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "statusBar": {
+        "barStyle": "light-content",
+        "backgroundColor": "#00000000",
+        "translucent": true
+      }
     },
     "ios": {
       "bundleIdentifier": "com.systemachadidos",
