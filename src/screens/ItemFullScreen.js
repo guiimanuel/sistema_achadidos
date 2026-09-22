@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../components/colors.js';
+import { colors } from '../styles/colors.js';
 
 const logoImage = require('../assets/images/mural-caixa.png');
 const bottleImage = require('../assets/images/garrafa.png');
@@ -21,10 +21,10 @@ const notebookImage = require('../assets/images/caderno.png');
 const caseImage = require('../assets/images/estojo.png');
 const INSTITUTION_EMAIL = 'daee@jaboatao.ifpe.edu.br';
 
-// CREDENCIAIS DO EMAILJS (Substitua pelos dados da sua conta se for usar em produção)
-const EMAILJS_SERVICE_ID = 'SEU_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'SEU_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY = 'SUA_PUBLIC_KEY';
+// CREDENCIAIS DO EMAILJS
+const EMAILJS_SERVICE_ID = 'service_wuhafya';
+const EMAILJS_TEMPLATE_ID = 'template_vwyjd8c';
+const EMAILJS_PUBLIC_KEY = 'sf7es5fokN-JUdLiR';
 
 function normalizeText(value) {
   return String(value || '')
@@ -138,7 +138,7 @@ function ItemFullScreen({ navigation, route }) {
       Alert.alert('Aviso', 'E-mail de destino não encontrado.');
       return;
     }
-    setIsSuccess(false); // Garante que abre o formulário
+    setIsSuccess(false);
     setTargetEmail(recipientEmail);
     setSubject(`Sobre o item "${title}" - Achados e Perdidos`);
     setMessage(
@@ -158,19 +158,11 @@ function ItemFullScreen({ navigation, route }) {
     setIsSending(true);
 
     try {
-      // Se não houver chaves reais configuradas ainda, simula o envio com sucesso para testes do app
-      if (EMAILJS_SERVICE_ID === 'SEU_SERVICE_ID') {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setIsSuccess(true);
-        setMessage('');
-        setSenderName('');
-        return;
-      }
-
       const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'origin': 'localhost',
         },
         body: JSON.stringify({
           service_id: EMAILJS_SERVICE_ID,
@@ -178,7 +170,7 @@ function ItemFullScreen({ navigation, route }) {
           user_id: EMAILJS_PUBLIC_KEY,
           template_params: {
             to_email: targetEmail,
-            from_name: senderName || 'Usuário do App',
+            from_name: senderName.trim() || 'Usuário do App',
             item_title: title,
             subject: subject,
             message: message,
@@ -192,11 +184,12 @@ function ItemFullScreen({ navigation, route }) {
         setSenderName('');
       } else {
         const errorText = await response.text();
-        throw new Error(errorText || 'Falha na resposta do serviço de envio.');
+        console.error('Resposta de erro do EmailJS:', errorText);
+        Alert.alert('Erro ao enviar', `O serviço recusou o envio: ${errorText}`);
       }
     } catch (error) {
-      console.error(error);
-      Alert.alert('Erro ao enviar', 'Não foi possível enviar o e-mail. Verifique a conexão ou as chaves da API.');
+      console.error('Falha de conexão com a API:', error);
+      Alert.alert('Erro ao enviar', 'Não foi possível conectar ao servidor de e-mail. Verifique sua conexão.');
     } finally {
       setIsSending(false);
     }
@@ -211,7 +204,7 @@ function ItemFullScreen({ navigation, route }) {
           style={styles.missingBackButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={22} color="#ffffff" />
+          <Ionicons name="arrow-back" size={22} color={colors.white} />
         </Pressable>
         <Text style={styles.missingTitle}>Publicação não encontrada</Text>
         <Text style={styles.missingText}>Volte para o mural e escolha outro item.</Text>
@@ -220,7 +213,11 @@ function ItemFullScreen({ navigation, route }) {
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+        style={styles.container}> 
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
@@ -234,40 +231,44 @@ function ItemFullScreen({ navigation, route }) {
             style={styles.backButton}
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="arrow-back" size={22} color="#ffffff" />
+            <Ionicons name="arrow-back" size={22} color={colors.white} />
           </Pressable>
         </View>
 
-        <View style={styles.details}>
-          <Text selectable style={styles.title}>
-            {title}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Descrição</Text>
+          <Text selectable style={styles.description}>
+            {description}
+          </Text>
+        </View>
+
+        <View style={styles.card}>
+          <InfoRow icon="pricetag-outline" label="Categoria" value={category} />
+          <InfoRow icon="calendar-outline" label="Publicado em" value={dateText} />
+          <InfoRow icon="location-outline" label="Local" value={location} />
+          <InfoRow icon="mail-outline" label="Contato" value={ownerEmail} />
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.helpText}>
+            Esse item é seu? Entre em contato com quem publicou ou fale com a DAEE.
           </Text>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Descrição</Text>
-            <Text selectable style={styles.description}>
-              {description}
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-            <InfoRow icon="pricetag-outline" label="Categoria" value={category} />
-            <InfoRow icon="calendar-outline" label="Publicado em" value={dateText} />
-            <InfoRow icon="location-outline" label="Local" value={location} />
-            <InfoRow icon="mail-outline" label="Contato" value={ownerEmail} />
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.helpText}>
-              Esse item é seu? Entre em contato com quem publicou ou fale com a DAEE.
-            </Text>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.contactButton}
+            onPress={() => openEmailModal(ownerEmail, false)}
+          >
+            <Ionicons name="mail-outline" size={21} color="#ffffff" />
+            <Text style={styles.contactButtonText}>Contatar publicador</Text>
+          </Pressable>
 
             <Pressable
               accessibilityRole="button"
               style={styles.contactButton}
               onPress={() => openEmailModal(ownerEmail, false)}
             >
-              <Ionicons name="mail-outline" size={21} color="#ffffff" />
+              <Ionicons name="mail-outline" size={21} color={colors.white} />
               <Text style={styles.contactButtonText}>Contatar publicador</Text>
             </Pressable>
 
@@ -283,7 +284,7 @@ function ItemFullScreen({ navigation, route }) {
             </Pressable>
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       {/* MODAL COM FORMULÁRIO OU TELA DE SUCESSO */}
       <Modal
@@ -295,7 +296,6 @@ function ItemFullScreen({ navigation, route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             {isSuccess ? (
-              /* AVISO DIRETO NA TELA */
               <View style={styles.successWrapper}>
                 <Ionicons name="checkmark-circle" size={72} color={colors.green_primary} />
                 <Text style={styles.successTitle}>E-mail enviado com sucesso!</Text>
@@ -315,12 +315,11 @@ function ItemFullScreen({ navigation, route }) {
                 </Pressable>
               </View>
             ) : (
-              /* FORMULÁRIO */
               <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Enviar Mensagem</Text>
                   <Pressable onPress={() => setModalVisible(false)}>
-                    <Ionicons name="close" size={24} color="#333" />
+                    <Ionicons name="close" size={24} color={colors.text_primary} />
                   </Pressable>
                 </View>
 
@@ -334,7 +333,7 @@ function ItemFullScreen({ navigation, route }) {
                   placeholder="Ex: Maria Clara"
                   value={senderName}
                   onChangeText={setSenderName}
-                  placeholderTextColor={colors.gray_placeholder || '#999'}
+                  placeholderTextColor={colors.gray_placeholder}
                 />
 
                 <Text style={styles.inputLabel}>Assunto</Text>
@@ -343,7 +342,7 @@ function ItemFullScreen({ navigation, route }) {
                   placeholder="Assunto"
                   value={subject}
                   onChangeText={setSubject}
-                  placeholderTextColor={colors.gray_placeholder || '#999'}
+                  placeholderTextColor={colors.gray_placeholder}
                 />
 
                 <Text style={styles.inputLabel}>Mensagem</Text>
@@ -355,7 +354,7 @@ function ItemFullScreen({ navigation, route }) {
                   multiline
                   numberOfLines={5}
                   textAlignVertical="top"
-                  placeholderTextColor={colors.gray_placeholder || '#999'}
+                  placeholderTextColor={colors.gray_placeholder}
                 />
 
                 <View style={styles.modalActions}>
@@ -373,7 +372,7 @@ function ItemFullScreen({ navigation, route }) {
                     disabled={isSending}
                   >
                     {isSending ? (
-                      <ActivityIndicator color="#fff" />
+                      <ActivityIndicator color={colors.white} />
                     ) : (
                       <Text style={styles.sendBtnText}>Enviar</Text>
                     )}
@@ -384,7 +383,7 @@ function ItemFullScreen({ navigation, route }) {
           </View>
         </View>
       </Modal>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -393,7 +392,7 @@ export default ItemFullScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f7f2',
+    backgroundColor: colors.screen_background,
   },
   content: {
     paddingBottom: 32,
@@ -425,7 +424,7 @@ const styles = StyleSheet.create({
     gap: 18,
   },
   title: {
-    color: '#142018',
+    color: colors.text_title,
     fontSize: 28,
     lineHeight: 34,
     fontFamily: 'MontserratExtraBold',
@@ -439,7 +438,7 @@ const styles = StyleSheet.create({
     fontFamily: 'MontserratBold',
   },
   description: {
-    color: '#2e352f',
+    color: colors.text_body,
     fontSize: 16,
     lineHeight: 23,
     fontFamily: 'MontserratMedium',
@@ -450,10 +449,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#dfe7db',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     ...Platform.select({
       ios: {
-        shadowColor: '#243325',
+        shadowColor: colors.shadow_green,
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.1,
         shadowRadius: 6,
@@ -496,7 +495,7 @@ const styles = StyleSheet.create({
     fontFamily: 'MontserratMedium',
   },
   helpText: {
-    color: '#2e352f',
+    color: colors.text_body,
     textAlign: 'center',
     fontSize: 15,
     lineHeight: 21,
@@ -515,12 +514,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   institutionButton: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderWidth: 1.5,
     borderColor: colors.green_primary,
   },
   contactButtonText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 17,
     lineHeight: 22,
     textAlign: 'center',
@@ -531,7 +530,7 @@ const styles = StyleSheet.create({
   },
   missingContainer: {
     flex: 1,
-    backgroundColor: '#f6f7f2',
+    backgroundColor: colors.screen_background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -560,8 +559,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'MontserratMedium',
   },
-
-  /* Modal */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -570,7 +567,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 22,
     width: '100%',
@@ -578,7 +575,7 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 10,
@@ -604,17 +601,17 @@ const styles = StyleSheet.create({
   },
   modalSub: {
     fontSize: 13,
-    color: '#555',
+    color: colors.text_secondary,
     marginBottom: 16,
   },
   modalBold: {
     fontFamily: 'MontserratBold',
-    color: '#142018',
+    color: colors.text_title,
   },
   inputLabel: {
     fontSize: 13,
     fontFamily: 'MontserratSemiBold',
-    color: '#333',
+    color: colors.text_primary,
     marginBottom: 6,
   },
   input: {
@@ -626,7 +623,7 @@ const styles = StyleSheet.create({
     fontFamily: 'MontserratMedium',
     fontSize: 14,
     backgroundColor: '#fafafa',
-    color: '#333',
+    color: colors.text_primary,
   },
   textArea: {
     minHeight: 110,
@@ -655,11 +652,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.green_primary,
   },
   sendBtnText: {
-    color: '#ffffff',
+    color: colors.white,
     fontFamily: 'MontserratBold',
   },
-
-  /* Card de Sucesso exibido no Modal */
   successWrapper: {
     alignItems: 'center',
     paddingVertical: 20,
@@ -676,7 +671,7 @@ const styles = StyleSheet.create({
   successDescription: {
     fontSize: 15,
     fontFamily: 'MontserratMedium',
-    color: '#555',
+    color: colors.text_secondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
@@ -690,7 +685,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successBtnText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 16,
     fontFamily: 'MontserratBold',
   },

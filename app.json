@@ -1,47 +1,41 @@
 {
-
-"expo": {
-"name": "system_achadidos",
-"slug": "system_achadidos",
-"icon": "./src/icons/icone.png",
-"version": "1.0.2",
-
-"android": {
-  "package": "com.systemachadidos",
-  "icon": "./src/icons/mural-caixa.png",
-  "permissions": [
-    "android.permission.INTERNET",
-    "android.permission.CAMERA",
-    "android.permission.READ_MEDIA_IMAGES"
-  ]
-},
-
-"ios": {
-  "bundleIdentifier": "com.systemachadidos",
-  "infoPlist": {
-    "NSCameraUsageDescription": "Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.",
-    "NSPhotoLibraryUsageDescription": "Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações."
-  }
-},
-
-"plugins": [
-  [
-    "expo-image-picker",
-    {
-      "cameraPermission": "Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.",
-      "photosPermission": "Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações.",
-      "microphonePermission": false
+  "expo": {
+    "name": "system_achadidos",
+    "slug": "system_achadidos",
+    "icon": "./src/icons/icone.png",
+    "version": "1.0.2",
+    "android": {
+      "package": "com.systemachadidos",
+      "icon": "./src/icons/mural-caixa.png",
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.CAMERA",
+        "android.permission.READ_MEDIA_IMAGES"
+      ],
+      "softwareKeyboardLayoutMode": "resize"
+    },
+    "ios": {
+      "bundleIdentifier": "com.systemachadidos",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.",
+        "NSPhotoLibraryUsageDescription": "Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações."
+      }
+    },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.",
+          "photosPermission": "Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações.",
+          "microphonePermission": false
+        }
+      ],
+      "expo-font"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "227fc762-2dd9-4648-ac36-51416207bdc8"
+      }
     }
-  ],
-  "expo-font"
-],
-
-"extra": {
-  "eas": {
-    "projectId": "227fc762-2dd9-4648-ac36-51416207bdc8"
-
   }
-}
-
-}
 }

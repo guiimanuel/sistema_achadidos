@@ -14,13 +14,11 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
-import { onAuthStateChanged } from 'firebase/auth';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { colors } from '../components/colors.js';
-import { auth, db } from '../utils/firebase.js';
-import { useExpoFonts } from '../components/expoFonts.js';
-
-const ITEM_COLLECTIONS = ['itens', 'item'];
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { colors } from '../styles/colors.js';
+import { observarAutenticacao } from '../services/auth.js';
+import { COLECOES_PUBLICACOES, observarPublicacoes } from '../services/publicacoes.js';
 const DEFAULT_FILTERS = ['Material escolar', 'Utensílio pessoal', 'Caderno', 'Garrafa', 'Celular'];
 
 const logoImage = require('../assets/images/mural-caixa.png');
@@ -47,21 +45,11 @@ function firstValue(data, keys) {
 }
 
 function toMillis(value) {
-  if (!value) {
-    return 0;
-  }
-  if (typeof value.toMillis === 'function') {
-    return value.toMillis();
-  }
-  if (typeof value.toDate === 'function') {
-    return value.toDate().getTime();
-  }
-  if (typeof value.seconds === 'number') {
-    return value.seconds * 1000;
-  }
-  if (typeof value === 'number') {
-    return value < 10000000000 ? value * 1000 : value;
-  }
+  if (!value) return 0;
+  if (typeof value.toMillis === 'function') return value.toMillis();
+  if (typeof value.toDate === 'function') return value.toDate().getTime();
+  if (typeof value.seconds === 'number') return value.seconds * 1000;
+  if (typeof value === 'number') return value < 10000000000 ? value * 1000 : value;
   if (typeof value === 'string') {
     const trimmed = value.trim();
     const brDate = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
@@ -87,9 +75,7 @@ function pad(value) {
 
 function formatDate(value) {
   const millis = toMillis(value);
-  if (!millis) {
-    return '';
-  }
+  if (!millis) return '';
   const date = new Date(millis);
   return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(
     date.getHours()
@@ -149,15 +135,9 @@ function normalizeItem(docId, data, sourceCollection) {
 
 function getFallbackImage(item) {
   const text = normalizeText(`${item.title} ${item.category}`);
-  if (text.includes('garrafa')) {
-    return bottleImage;
-  }
-  if (text.includes('estojo')) {
-    return caseImage;
-  }
-  if (text.includes('caderno')) {
-    return notebookImage;
-  }
+  if (text.includes('garrafa')) return bottleImage;
+  if (text.includes('estojo')) return caseImage;
+  if (text.includes('caderno')) return notebookImage;
   return logoImage;
 }
 
@@ -169,13 +149,12 @@ function getImageSource(item) {
 }
 
 function belongsToUser(item, user) {
-  if (!user) {
-    return false;
-  }
+  if (!user) return false;
   return item.ownerId === user.uid || item.ownerEmail === user.email;
 }
 
 function HomeScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const [currentUser, setCurrentUser] = useState(null);
   const [search, setSearch] = useState('');
@@ -193,60 +172,51 @@ function HomeScreen({ navigation }) {
   const primeiraLetraUser = currentUser?.email ? currentUser.email.charAt(0).toUpperCase() : '?';
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (user) => {
+    return observarAutenticacao((user) => {
       setCurrentUser(user);
       if (!user) {
         setActiveTab('mural');
       }
     });
-  }, [auth]);
+  }, []);
 
   useEffect(() => {
-    const unsubscribers = ITEM_COLLECTIONS.map((collectionName) =>
-      onSnapshot(
-        collection(db, collectionName),
-        (snapshot) => {
-          const items = snapshot.docs.map((doc) =>
-            normalizeItem(doc.id, doc.data(), collectionName)
-          );
+    return observarPublicacoes(
+      (collectionName, docs) => {
+        const items = docs.map((doc) => normalizeItem(doc.id, doc.data(), collectionName));
 
-          setItemsByCollection((current) => ({
-            ...current,
-            [collectionName]: items,
-          }));
-          setLoadedCollections((current) => ({
-            ...current,
-            [collectionName]: true,
-          }));
-          setCollectionErrors((current) => {
-            const next = { ...current };
-            delete next[collectionName];
-            return next;
-          });
-        },
-        (error) => {
-          console.log(`Erro ao carregar ${collectionName}:`, error);
-          setLoadedCollections((current) => ({
-            ...current,
-            [collectionName]: true,
-          }));
-          setCollectionErrors((current) => ({
-            ...current,
-            [collectionName]: error.message,
-          }));
-        }
-      )
+        setItemsByCollection((current) => ({
+          ...current,
+          [collectionName]: items,
+        }));
+        setLoadedCollections((current) => ({
+          ...current,
+          [collectionName]: true,
+        }));
+        setCollectionErrors((current) => {
+          const next = { ...current };
+          delete next[collectionName];
+          return next;
+        });
+      },
+      (collectionName, error) => {
+        console.log(`Erro ao carregar ${collectionName}:`, error);
+        setLoadedCollections((current) => ({
+          ...current,
+          [collectionName]: true,
+        }));
+        setCollectionErrors((current) => ({
+          ...current,
+          [collectionName]: error.message,
+        }));
+      }
     );
-
-    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
-  }, [db]);
+  }, []);
 
   useEffect(() => {
     const layout = tabLayouts[activeTab];
 
-    if (!layout) {
-      return;
-    }
+    if (!layout) return;
 
     Animated.parallel([
       Animated.timing(tabTranslateX, {
@@ -303,7 +273,7 @@ function HomeScreen({ navigation }) {
     });
   }
 
-  const loading = ITEM_COLLECTIONS.some((collectionName) => !loadedCollections[collectionName]);
+  const loading = COLECOES_PUBLICACOES.some((collectionName) => !loadedCollections[collectionName]);
 
   const allItems = React.useMemo(() => {
     return Object.values(itemsByCollection)
@@ -329,9 +299,7 @@ function HomeScreen({ navigation }) {
   }, [allItems]);
 
   useEffect(() => {
-    if (!activeFilter) {
-      return;
-    }
+    if (!activeFilter) return;
 
     const hasActiveFilter = filterOptions.some(
       (filter) => normalizeText(filter) === normalizeText(activeFilter)
@@ -364,7 +332,7 @@ function HomeScreen({ navigation }) {
     !loading &&
     filteredItems.length === 0 &&
     allItems.length === 0 &&
-    Object.keys(collectionErrors).length === ITEM_COLLECTIONS.length;
+    Object.keys(collectionErrors).length === COLECOES_PUBLICACOES.length;
 
   function handleAuthPress() {
     if (currentUser) {
@@ -433,7 +401,7 @@ function HomeScreen({ navigation }) {
               style={styles.addItemButton}
               onPress={() => navigation.navigate('CadastrarItem')}
             >
-              <Ionicons name="add-circle-outline" size={23} color="#ffffff" />
+              <Ionicons name="add-circle-outline" size={23} color={colors.white} />
               <Text style={styles.addItemButtonText}>Adicionar item</Text>
             </Pressable>
           ) : null}
@@ -451,7 +419,7 @@ function HomeScreen({ navigation }) {
               <Ionicons
                 name={filterOpen ? 'funnel' : 'funnel-outline'}
                 size={24}
-                color={filterOpen || activeFilter ? '#ffffff' : colors.green_primary}
+                color={filterOpen || activeFilter ? colors.white : colors.green_primary}
               />
               <Text
                 style={[
@@ -570,14 +538,14 @@ function HomeScreen({ navigation }) {
           </Text>
         ) : null}
         <Text numberOfLines={1} style={styles.cardTitle}>
-          {item.title.toUpperCase()}
+          {item.title}
         </Text>
         <Text numberOfLines={5} style={styles.cardText}>
           {item.description || 'Sem descrição informada.'}
         </Text>
         {item.dateText ? (
           <View style={styles.cardFooter}>
-            <Ionicons name="calendar-outline" size={14} color="#6c7568" />
+            <Ionicons name="calendar-outline" size={14} color={colors.text_date} />
             <Text style={styles.cardDate}>{item.dateText}</Text>
           </View>
         ) : null}
@@ -586,10 +554,10 @@ function HomeScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" backgroundColor={colors.green_primary} />
+    <KeyboardAvoidingView style={styles.container}>
+      <StatusBar style="light" backgroundColor={colors.green_primary} translucent />
 
-      <View style={styles.topBar}>
+      <View style={[styles.topBar, { paddingTop: Math.max(insets.top + 12, 18) }]}>
         <View style={styles.topBarRow}>
           <View style={styles.logoSurface}>
             <Image source={logoImage} style={styles.logo} />
@@ -632,7 +600,6 @@ function HomeScreen({ navigation }) {
             </Pressable>
           ) : null}
         </View>
-
       </View>
 
       <FlatList
@@ -649,7 +616,7 @@ function HomeScreen({ navigation }) {
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -658,14 +625,12 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f7f2',
+    backgroundColor: colors.screen_background,
   },
   topBar: {
-    minHeight: 158,
     backgroundColor: colors.green_primary,
     gap: 14,
     paddingHorizontal: 18,
-    paddingTop: 18,
     paddingBottom: 18,
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 18,
@@ -686,18 +651,22 @@ const styles = StyleSheet.create({
   logo: {
     width: 150,
     height: 150,
-    marginTop: 25,
+    marginTop: 10,
     resizeMode: 'contain',
   },
   searchBox: {
     height: 48,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 14,
-    boxShadow: '0 6px 14px rgba(0, 0, 0, 0.12)',
+    elevation: 4,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 7,
   },
   searchInput: {
     flex: 1,
@@ -705,41 +674,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: 0,
     fontFamily: 'MontserratSemiBold',
+    includeFontPadding: false,
   },
   profileButton: {
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderWidth: 2,
     borderColor: '#d8ded4',
     alignItems: 'center',
     justifyContent: 'center',
-    boxShadow: '0 6px 14px rgba(0, 0, 0, 0.12)',
+    elevation: 4,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 7,
   },
   profileInitial: {
     color: colors.green_primary,
     fontSize: 21,
-    fontWeight: '800',
-    fontFamily: 'MontserratBold',
+    fontFamily: 'MontserratExtraBold',
+    includeFontPadding: false,
   },
   loginButton: {
     height: 44,
     minWidth: 96,
     borderRadius: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 6,
     paddingHorizontal: 14,
-    boxShadow: '0 6px 14px rgba(0, 0, 0, 0.12)',
+    elevation: 4,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.12,
+    shadowRadius: 7,
   },
   loginText: {
     color: colors.green_primary,
     fontSize: 17,
-    fontWeight: '800',
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   listContent: {
     paddingBottom: 32,
@@ -753,19 +731,23 @@ const styles = StyleSheet.create({
   title: {
     color: colors.green_primary,
     fontSize: 27,
-    fontWeight: '900',
     textAlign: 'center',
     lineHeight: 32,
     fontFamily: 'MontserratExtraBold',
+    includeFontPadding: false,
   },
   controlsCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e1e6dc',
     padding: 12,
     gap: 12,
-    boxShadow: '0 6px 14px rgba(36, 51, 37, 0.08)',
+    elevation: 2,
+    shadowColor: colors.shadow_green,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.08,
+    shadowRadius: 7,
   },
   filtersRow: {
     minHeight: 42,
@@ -794,17 +776,19 @@ const styles = StyleSheet.create({
   filterButtonText: {
     color: colors.green_primary,
     fontSize: 15,
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   filterButtonTextActive: {
-    color: '#ffffff',
-    fontFamily: 'MontserratSemiBold',
+    color: colors.white,
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   tabs: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#eef4ea',
+    backgroundColor: colors.green_soft,
     borderRadius: 12,
     padding: 4,
     overflow: 'hidden',
@@ -834,18 +818,13 @@ const styles = StyleSheet.create({
     flex: 1.38,
     minWidth: 170,
   },
-  tabActive: {
-    backgroundColor: colors.green_primary,
-  },
-  tabInactive: {
-    backgroundColor: 'transparent',
-  },
   tabText: {
     fontSize: 14,
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   tabTextActive: {
-    color: '#ffffff',
+    color: colors.white,
   },
   tabTextInactive: {
     color: '#557056',
@@ -861,14 +840,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   addItemButtonText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 15,
-    fontFamily: 'MontserratSemiBold',
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   activeFilterChip: {
     minHeight: 38,
     borderRadius: 10,
-    backgroundColor: '#eef4ea',
+    backgroundColor: colors.green_soft,
     borderWidth: 1,
     borderColor: '#d8e5d4',
     flexDirection: 'row',
@@ -881,6 +861,7 @@ const styles = StyleSheet.create({
     color: '#315a32',
     fontSize: 14,
     fontFamily: 'MontserratSemiBold',
+    includeFontPadding: false,
   },
   filterOptions: {
     flexDirection: 'row',
@@ -900,6 +881,7 @@ const styles = StyleSheet.create({
     color: '#48544a',
     fontSize: 13,
     fontFamily: 'MontserratSemiBold',
+    includeFontPadding: false,
   },
   cardRow: {
     justifyContent: 'space-between',
@@ -910,9 +892,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#dfe4dc',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     padding: 12,
-    boxShadow: '0 5px 12px rgba(26, 38, 25, 0.08)',
+    elevation: 2,
+    shadowColor: '#1a2619',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
   },
   cardImageWrap: {
     width: '100%',
@@ -936,22 +922,26 @@ const styles = StyleSheet.create({
     borderRadius: 7,
     overflow: 'hidden',
     fontSize: 11,
-    fontWeight: '800',
     paddingHorizontal: 8,
     paddingVertical: 4,
     marginBottom: 7,
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   cardTitle: {
     color: '#121a14',
-    fontSize: 16,
-    fontWeight: '900',
+    fontSize: 15,
     marginBottom: 6,
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
   cardText: {
-    color: '#2e352f',
+    color: colors.text_body,
     fontSize: 13,
     lineHeight: 17,
     flexGrow: 1,
+    fontFamily: 'MontserratRegular',
+    includeFontPadding: false,
   },
   cardFooter: {
     flexDirection: 'row',
@@ -963,9 +953,10 @@ const styles = StyleSheet.create({
     borderTopColor: '#edf0ea',
   },
   cardDate: {
-    color: '#6c7568',
+    color: colors.text_date,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'MontserratRegular',
+    includeFontPadding: false,
   },
   emptyState: {
     minHeight: 260,
@@ -979,5 +970,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
     textAlign: 'center',
     fontFamily: 'MontserratSemiBold',
+    includeFontPadding: false,
   },
 });

@@ -1,40 +1,51 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../components/colors.js';
-import { auth } from '../utils/firebase.js';
 import { useExpoFonts } from '../components/expoFonts.js';
-
+import { colors } from '../styles/colors.js';
+import { entrar } from '../services/auth.js';
+import { KeyboardAvoidingView} from 'react-native-keyboard-controller';
 function LoginScreen({ navigation }) {
-  const { fontsLoaded, fontError } = useExpoFonts();
-  if (!fontsLoaded) {
-    return null;
-  }
+  const { fontsLoaded } = useExpoFonts();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
 
-  const signInUser = () => {
-    signInWithEmailAndPassword(auth, email, senha)
-      .then((userCredential) => {
-        const user = userCredential.user;
-        navigation.navigate('Home', user);
-      })
-      .catch(() => {
-        alert('Email ou senha inválidos!');
+  if (!fontsLoaded) {
+    return null;
+  }
+
+  const signInUser = async () => {
+    if (!email.trim() || !senha.trim()) {
+      Alert.alert('Campos vazios', 'Por favor, preencha o e-mail e a senha.');
+      return;
+    }
+
+    try {
+      const userCredential = await entrar(email, senha);
+      const user = userCredential.user;
+
+      // Passando apenas dados simples/serializáveis (evita o crash no APK)
+      navigation.navigate('Home', {
+        uid: user.uid,
+        email: user.email
       });
+
+    } catch (error) {
+      console.log('Erro de autenticação:', error);
+      Alert.alert('Erro ao entrar', 'E-mail ou senha inválidos.');
+    }
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container}>
       <StatusBar style="auto" />
 
       {/* Botão de seta fixado no topo esquerdo */}
-      <TouchableOpacity 
-        style={styles.backButton} 
+      <TouchableOpacity
+        style={styles.backButton}
         onPress={() => navigation.navigate('Home')}
       >
         <Ionicons name="arrow-back" size={28} color={colors.green_primary} />
@@ -47,15 +58,23 @@ function LoginScreen({ navigation }) {
         Faça o seu login com <Text style={styles.titlemini2}>email e senha</Text>
       </Text>
 
+      <Text style={styles.titulop}>
+        Email
+      </Text>
+     
       <TextInput
         placeholder="Email institucional..."
         style={styles.input}
         keyboardType="email-address"
+        autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
         placeholderTextColor={colors.gray_placeholder}
       />
 
+      <Text style={styles.titulop}>
+        Senha
+      </Text>
       <TextInput
         placeholder="Senha..."
         secureTextEntry
@@ -80,7 +99,7 @@ function LoginScreen({ navigation }) {
           Esqueceu a senha? <Text style={styles.link2}>Alterar</Text>
         </Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -91,15 +110,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white_background,
     flex: 1,
     justifyContent: 'center',
-    padding: 65,
+    padding: 56,
     position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 25,
-    zIndex: 10,
-    padding: 8,
   },
   title: {
     fontSize: 30,
@@ -115,6 +127,14 @@ const styles = StyleSheet.create({
     color: colors.green_primary,
     fontFamily: 'MontserratMedium',
   },
+
+  titulop:  {
+    fontSize: 15,
+    marginBottom: 6,
+    color: '#101010',
+    fontFamily: 'MontserratMedium',
+  }, 
+
   titlemini2: {
     fontSize: 17,
     marginBottom: 100,
@@ -127,9 +147,9 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     padding: 15,
-    marginBottom: 10,
+    marginBottom: 18,
     borderRadius: 8,
     borderColor: colors.blue_border,
     borderWidth: 1,
@@ -143,7 +163,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.white,
     textAlign: 'center',
     fontFamily: 'MontserratBold',
   },
