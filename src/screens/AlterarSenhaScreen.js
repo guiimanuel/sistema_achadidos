@@ -40,6 +40,10 @@ function AlterarSenhaScreen({ navigation }) {
                 Digite o e-mail da sua conta para receber o link de recuperação.
             </Text>
 
+
+      <Text style={styles.titulop}>
+        Email
+      </Text>
             <TextInput
                 placeholder="Email institucional..."
                 style={styles.input}
@@ -65,11 +69,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: "center",
-        padding: 65,
+        padding: 56,
         backgroundColor: colors.white_background,
     },
     title: {
         fontSize: 27,
+                textAlign: "center",
+
         fontFamily: 'MontserratExtraBold',
     },
     subtitle: {
@@ -91,6 +97,13 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginBottom: 3,
     },
+
+    titulop:  {
+    fontSize: 15,
+    marginBottom: 6,
+    color: '#101010',
+    fontFamily: 'MontserratMedium',
+  }, 
     buttonText: {
         color: colors.white,
         textAlign: "center",

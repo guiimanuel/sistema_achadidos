@@ -58,6 +58,10 @@ function LoginScreen({ navigation }) {
         Faça o seu login com <Text style={styles.titlemini2}>email e senha</Text>
       </Text>
 
+      <Text style={styles.titulop}>
+        Email
+      </Text>
+     
       <TextInput
         placeholder="Email institucional..."
         style={styles.input}
@@ -68,6 +72,9 @@ function LoginScreen({ navigation }) {
         placeholderTextColor={colors.gray_placeholder}
       />
 
+      <Text style={styles.titulop}>
+        Senha
+      </Text>
       <TextInput
         placeholder="Senha..."
         secureTextEntry
@@ -102,16 +109,9 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.white_background,
     flex: 1,
-    justify: 'center',
-    padding: 65,
+    justifyContent: 'center',
+    padding: 56,
     position: 'relative',
-  },
-  backButton: {
-    position: 'absolute',
-    top: 50,
-    left: 25,
-    zIndex: 10,
-    padding: 8,
   },
   title: {
     fontSize: 30,
@@ -127,6 +127,14 @@ const styles = StyleSheet.create({
     color: colors.green_primary,
     fontFamily: 'MontserratMedium',
   },
+
+  titulop:  {
+    fontSize: 15,
+    marginBottom: 6,
+    color: '#101010',
+    fontFamily: 'MontserratMedium',
+  }, 
+
   titlemini2: {
     fontSize: 17,
     marginBottom: 100,
@@ -141,7 +149,7 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: colors.white,
     padding: 15,
-    marginBottom: 10,
+    marginBottom: 18,
     borderRadius: 8,
     borderColor: colors.blue_border,
     borderWidth: 1,

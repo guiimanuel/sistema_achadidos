@@ -1,10 +1,11 @@
 import * as React from 'react';
-import { View, Text, StatusBar as RNStatusBar, Platform, ActivityIndicator } from 'react-native';
+import { View, Text, StatusBar as RNStatusBar, Platform, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import { Ionicons } from '@expo/vector-icons';
 import {
   useFonts,
   Montserrat_600SemiBold,
@@ -32,7 +33,7 @@ const Stack = createNativeStackNavigator();
 
 const STATUSBAR_HEIGHT = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 24) : 44;
 
-const renderHeader = (title = 'ACHADOS E PERDIDOS') => (
+const renderHeader = (navigation, showBackButton = false, title = 'ACHADOS E PERDIDOS') => (
   <View
     style={{
       height: 60 + STATUSBAR_HEIGHT,
@@ -47,14 +48,27 @@ const renderHeader = (title = 'ACHADOS E PERDIDOS') => (
       shadowOpacity: 0.15,
       shadowRadius: 4,
       elevation: 5,
+      position: 'relative',
     }}
   >
+    {showBackButton && (
+      <TouchableOpacity
+        style={{
+          position: 'absolute',
+          left: 16,
+          top: STATUSBAR_HEIGHT + 14,
+          zIndex: 10,
+        }}
+        onPress={() => navigation.navigate('Home')}
+      >
+        <Ionicons name="arrow-back" size={26} color="#fff" />
+      </TouchableOpacity>
+    )}
     <Text style={theme.typography.headerTitle}>{title}</Text>
   </View>
 );
 
 function App() {
-  // Carregamento direto das fontes mapeadas com os exatos nomes usados nos estilos
   const [fontsLoaded] = useFonts({
     MontserratSemiBold: Montserrat_600SemiBold,
     MontserratBold: Montserrat_700Bold,
@@ -76,15 +90,21 @@ function App() {
         <StatusBar style="light" backgroundColor={colors.green_primary} translucent={true} />
 
         <Stack.Navigator initialRouteName="Home">
-          <Stack.Screen name="Login" component={LoginScreen} options={{ header: () => renderHeader() }} />
-          <Stack.Screen name="AlterarSenha" component={AlterarSenhaScreen} options={{ header: () => renderHeader() }} />
-          <Stack.Screen name="Cadastro" component={CadastroScreen} options={{ header: () => renderHeader() }} />
+          <Stack.Screen 
+            name="Login" 
+            component={LoginScreen} 
+            options={({ navigation }) => ({ 
+              header: () => renderHeader(navigation, true) 
+            })} 
+          />
+          <Stack.Screen name="AlterarSenha" component={AlterarSenhaScreen} options={({ navigation }) => ({ header: () => renderHeader(navigation) })} />
+          <Stack.Screen name="Cadastro" component={CadastroScreen} options={({ navigation }) => ({ header: () => renderHeader(navigation) })} />
           <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="CadastrarItem" component={CadastrarItemScreen} options={{ header: () => renderHeader() }} />
-          <Stack.Screen name="EditarItem" component={EditarItemScreen} options={{ header: () => renderHeader() }} />
+          <Stack.Screen name="CadastrarItem" component={CadastrarItemScreen} options={({ navigation }) => ({ header: () => renderHeader(navigation) })} />
+          <Stack.Screen name="EditarItem" component={EditarItemScreen} options={({ navigation }) => ({ header: () => renderHeader(navigation) })} />
           <Stack.Screen name="ItemFullScreen" component={ItemFullScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="EscolherImagem" component={EscolherImagemScreen} options={{ header: () => renderHeader() }} />
-          <Stack.Screen name="EscolherImagemEditar" component={EscolherImagemEditarScreen} options={{ header: () => renderHeader() }} />
+          <Stack.Screen name="EscolherImagem" component={EscolherImagemScreen} options={({ navigation }) => ({ header: () => renderHeader(navigation) })} />
+          <Stack.Screen name="EscolherImagemEditar" component={EscolherImagemEditarScreen} options={({ navigation }) => ({ header: () => renderHeader(navigation) })} />
           <Stack.Screen name="MinhasPublicacoes" component={MinhasPublicacoesScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Perfil" component={PerfilScreen} options={{ headerShown: false }} />
         </Stack.Navigator>

@@ -21,10 +21,10 @@ const notebookImage = require('../assets/images/caderno.png');
 const caseImage = require('../assets/images/estojo.png');
 const INSTITUTION_EMAIL = 'daee@jaboatao.ifpe.edu.br';
 
-// CREDENCIAIS DO EMAILJS (Substitua pelos dados da sua conta se for usar em produção)
-const EMAILJS_SERVICE_ID = 'SEU_SERVICE_ID';
-const EMAILJS_TEMPLATE_ID = 'SEU_TEMPLATE_ID';
-const EMAILJS_PUBLIC_KEY = 'SUA_PUBLIC_KEY';
+// CREDENCIAIS DO EMAILJS
+const EMAILJS_SERVICE_ID = 'service_wuhafya';
+const EMAILJS_TEMPLATE_ID = 'template_vwyjd8c';
+const EMAILJS_PUBLIC_KEY = 'sf7es5fokN-JUdLiR';
 
 function normalizeText(value) {
   return String(value || '')
@@ -138,7 +138,7 @@ function ItemFullScreen({ navigation, route }) {
       Alert.alert('Aviso', 'E-mail de destino não encontrado.');
       return;
     }
-    setIsSuccess(false); // Garante que abre o formulário
+    setIsSuccess(false);
     setTargetEmail(recipientEmail);
     setSubject(`Sobre o item "${title}" - Achados e Perdidos`);
     setMessage(
@@ -158,19 +158,11 @@ function ItemFullScreen({ navigation, route }) {
     setIsSending(true);
 
     try {
-      // Se não houver chaves reais configuradas ainda, simula o envio com sucesso para testes do app
-      if (EMAILJS_SERVICE_ID === 'SEU_SERVICE_ID') {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setIsSuccess(true);
-        setMessage('');
-        setSenderName('');
-        return;
-      }
-
       const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'origin': 'localhost',
         },
         body: JSON.stringify({
           service_id: EMAILJS_SERVICE_ID,
@@ -178,7 +170,7 @@ function ItemFullScreen({ navigation, route }) {
           user_id: EMAILJS_PUBLIC_KEY,
           template_params: {
             to_email: targetEmail,
-            from_name: senderName || 'Usuário do App',
+            from_name: senderName.trim() || 'Usuário do App',
             item_title: title,
             subject: subject,
             message: message,
@@ -192,11 +184,12 @@ function ItemFullScreen({ navigation, route }) {
         setSenderName('');
       } else {
         const errorText = await response.text();
-        throw new Error(errorText || 'Falha na resposta do serviço de envio.');
+        console.error('Resposta de erro do EmailJS:', errorText);
+        Alert.alert('Erro ao enviar', `O serviço recusou o envio: ${errorText}`);
       }
     } catch (error) {
-      console.error(error);
-      Alert.alert('Erro ao enviar', 'Não foi possível enviar o e-mail. Verifique a conexão ou as chaves da API.');
+      console.error('Falha de conexão com a API:', error);
+      Alert.alert('Erro ao enviar', 'Não foi possível conectar ao servidor de e-mail. Verifique sua conexão.');
     } finally {
       setIsSending(false);
     }
@@ -242,29 +235,33 @@ function ItemFullScreen({ navigation, route }) {
           </Pressable>
         </View>
 
-        <View style={styles.details}>
-          <Text selectable style={styles.title}>
-            {title}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Descrição</Text>
+          <Text selectable style={styles.description}>
+            {description}
+          </Text>
+        </View>
+
+        <View style={styles.card}>
+          <InfoRow icon="pricetag-outline" label="Categoria" value={category} />
+          <InfoRow icon="calendar-outline" label="Publicado em" value={dateText} />
+          <InfoRow icon="location-outline" label="Local" value={location} />
+          <InfoRow icon="mail-outline" label="Contato" value={ownerEmail} />
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.helpText}>
+            Esse item é seu? Entre em contato com quem publicou ou fale com a DAEE.
           </Text>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Descrição</Text>
-            <Text selectable style={styles.description}>
-              {description}
-            </Text>
-          </View>
-
-          <View style={styles.card}>
-            <InfoRow icon="pricetag-outline" label="Categoria" value={category} />
-            <InfoRow icon="calendar-outline" label="Publicado em" value={dateText} />
-            <InfoRow icon="location-outline" label="Local" value={location} />
-            <InfoRow icon="mail-outline" label="Contato" value={ownerEmail} />
-          </View>
-
-          <View style={styles.card}>
-            <Text style={styles.helpText}>
-              Esse item é seu? Entre em contato com quem publicou ou fale com a DAEE.
-            </Text>
+          <Pressable
+            accessibilityRole="button"
+            style={styles.contactButton}
+            onPress={() => openEmailModal(ownerEmail, false)}
+          >
+            <Ionicons name="mail-outline" size={21} color="#ffffff" />
+            <Text style={styles.contactButtonText}>Contatar publicador</Text>
+          </Pressable>
 
             <Pressable
               accessibilityRole="button"
@@ -287,7 +284,7 @@ function ItemFullScreen({ navigation, route }) {
             </Pressable>
           </View>
         </View>
-      </ScrollView>
+      </View>
 
       {/* MODAL COM FORMULÁRIO OU TELA DE SUCESSO */}
       <Modal
@@ -299,7 +296,6 @@ function ItemFullScreen({ navigation, route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             {isSuccess ? (
-              /* AVISO DIRETO NA TELA */
               <View style={styles.successWrapper}>
                 <Ionicons name="checkmark-circle" size={72} color={colors.green_primary} />
                 <Text style={styles.successTitle}>E-mail enviado com sucesso!</Text>
@@ -319,7 +315,6 @@ function ItemFullScreen({ navigation, route }) {
                 </Pressable>
               </View>
             ) : (
-              /* FORMULÁRIO */
               <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Enviar Mensagem</Text>
@@ -564,8 +559,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'MontserratMedium',
   },
-
-  /* Modal */
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
@@ -662,8 +655,6 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontFamily: 'MontserratBold',
   },
-
-  /* Card de Sucesso exibido no Modal */
   successWrapper: {
     alignItems: 'center',
     paddingVertical: 20,
