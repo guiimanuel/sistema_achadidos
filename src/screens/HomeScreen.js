@@ -14,13 +14,11 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { onAuthStateChanged } from 'firebase/auth';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { colors } from '../components/colors.js';
-import { auth, db } from '../utils/firebase.js';
-
-const ITEM_COLLECTIONS = ['itens', 'item'];
+import { colors } from '../styles/colors.js';
+import { observarAutenticacao } from '../services/auth.js';
+import { COLECOES_PUBLICACOES, observarPublicacoes } from '../services/publicacoes.js';
 const DEFAULT_FILTERS = ['Material escolar', 'Utensílio pessoal', 'Caderno', 'Garrafa', 'Celular'];
 
 const logoImage = require('../assets/images/mural-caixa.png');
@@ -174,7 +172,7 @@ function HomeScreen({ navigation }) {
   const primeiraLetraUser = currentUser?.email ? currentUser.email.charAt(0).toUpperCase() : '?';
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (user) => {
+    return observarAutenticacao((user) => {
       setCurrentUser(user);
       if (!user) {
         setActiveTab('mural');
@@ -183,43 +181,36 @@ function HomeScreen({ navigation }) {
   }, []);
 
   useEffect(() => {
-    const unsubscribers = ITEM_COLLECTIONS.map((collectionName) =>
-      onSnapshot(
-        collection(db, collectionName),
-        (snapshot) => {
-          const items = snapshot.docs.map((doc) =>
-            normalizeItem(doc.id, doc.data(), collectionName)
-          );
+    return observarPublicacoes(
+      (collectionName, docs) => {
+        const items = docs.map((doc) => normalizeItem(doc.id, doc.data(), collectionName));
 
-          setItemsByCollection((current) => ({
-            ...current,
-            [collectionName]: items,
-          }));
-          setLoadedCollections((current) => ({
-            ...current,
-            [collectionName]: true,
-          }));
-          setCollectionErrors((current) => {
-            const next = { ...current };
-            delete next[collectionName];
-            return next;
-          });
-        },
-        (error) => {
-          console.log(`Erro ao carregar ${collectionName}:`, error);
-          setLoadedCollections((current) => ({
-            ...current,
-            [collectionName]: true,
-          }));
-          setCollectionErrors((current) => ({
-            ...current,
-            [collectionName]: error.message,
-          }));
-        }
-      )
+        setItemsByCollection((current) => ({
+          ...current,
+          [collectionName]: items,
+        }));
+        setLoadedCollections((current) => ({
+          ...current,
+          [collectionName]: true,
+        }));
+        setCollectionErrors((current) => {
+          const next = { ...current };
+          delete next[collectionName];
+          return next;
+        });
+      },
+      (collectionName, error) => {
+        console.log(`Erro ao carregar ${collectionName}:`, error);
+        setLoadedCollections((current) => ({
+          ...current,
+          [collectionName]: true,
+        }));
+        setCollectionErrors((current) => ({
+          ...current,
+          [collectionName]: error.message,
+        }));
+      }
     );
-
-    return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
   }, []);
 
   useEffect(() => {
@@ -282,7 +273,7 @@ function HomeScreen({ navigation }) {
     });
   }
 
-  const loading = ITEM_COLLECTIONS.some((collectionName) => !loadedCollections[collectionName]);
+  const loading = COLECOES_PUBLICACOES.some((collectionName) => !loadedCollections[collectionName]);
 
   const allItems = React.useMemo(() => {
     return Object.values(itemsByCollection)
@@ -341,7 +332,7 @@ function HomeScreen({ navigation }) {
     !loading &&
     filteredItems.length === 0 &&
     allItems.length === 0 &&
-    Object.keys(collectionErrors).length === ITEM_COLLECTIONS.length;
+    Object.keys(collectionErrors).length === COLECOES_PUBLICACOES.length;
 
   function handleAuthPress() {
     if (currentUser) {
@@ -410,7 +401,7 @@ function HomeScreen({ navigation }) {
               style={styles.addItemButton}
               onPress={() => navigation.navigate('CadastrarItem')}
             >
-              <Ionicons name="add-circle-outline" size={23} color="#ffffff" />
+              <Ionicons name="add-circle-outline" size={23} color={colors.white} />
               <Text style={styles.addItemButtonText}>Adicionar item</Text>
             </Pressable>
           ) : null}
@@ -428,7 +419,7 @@ function HomeScreen({ navigation }) {
               <Ionicons
                 name={filterOpen ? 'funnel' : 'funnel-outline'}
                 size={24}
-                color={filterOpen || activeFilter ? '#ffffff' : colors.green_primary}
+                color={filterOpen || activeFilter ? colors.white : colors.green_primary}
               />
               <Text
                 style={[
@@ -554,7 +545,7 @@ function HomeScreen({ navigation }) {
         </Text>
         {item.dateText ? (
           <View style={styles.cardFooter}>
-            <Ionicons name="calendar-outline" size={14} color="#6c7568" />
+            <Ionicons name="calendar-outline" size={14} color={colors.text_date} />
             <Text style={styles.cardDate}>{item.dateText}</Text>
           </View>
         ) : null}
@@ -563,7 +554,7 @@ function HomeScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container}>
       <StatusBar style="light" backgroundColor={colors.green_primary} translucent />
 
       <View style={[styles.topBar, { paddingTop: Math.max(insets.top + 12, 18) }]}>
@@ -625,7 +616,7 @@ function HomeScreen({ navigation }) {
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
       />
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -634,7 +625,7 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f7f2',
+    backgroundColor: colors.screen_background,
   },
   topBar: {
     backgroundColor: colors.green_primary,
@@ -665,14 +656,14 @@ const styles = StyleSheet.create({
   },
   searchBox: {
     height: 48,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 14,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
     shadowRadius: 7,
@@ -689,13 +680,13 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderWidth: 2,
     borderColor: '#d8ded4',
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
     shadowRadius: 7,
@@ -710,14 +701,14 @@ const styles = StyleSheet.create({
     height: 44,
     minWidth: 96,
     borderRadius: 12,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 6,
     paddingHorizontal: 14,
     elevation: 4,
-    shadowColor: '#000000',
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.12,
     shadowRadius: 7,
@@ -746,14 +737,14 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   controlsCard: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e1e6dc',
     padding: 12,
     gap: 12,
     elevation: 2,
-    shadowColor: '#243325',
+    shadowColor: colors.shadow_green,
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.08,
     shadowRadius: 7,
@@ -789,7 +780,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   filterButtonTextActive: {
-    color: '#ffffff',
+    color: colors.white,
     fontFamily: 'MontserratBold',
     includeFontPadding: false,
   },
@@ -797,7 +788,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#eef4ea',
+    backgroundColor: colors.green_soft,
     borderRadius: 12,
     padding: 4,
     overflow: 'hidden',
@@ -833,7 +824,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   tabTextActive: {
-    color: '#ffffff',
+    color: colors.white,
   },
   tabTextInactive: {
     color: '#557056',
@@ -849,7 +840,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
   },
   addItemButtonText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 15,
     fontFamily: 'MontserratBold',
     includeFontPadding: false,
@@ -857,7 +848,7 @@ const styles = StyleSheet.create({
   activeFilterChip: {
     minHeight: 38,
     borderRadius: 10,
-    backgroundColor: '#eef4ea',
+    backgroundColor: colors.green_soft,
     borderWidth: 1,
     borderColor: '#d8e5d4',
     flexDirection: 'row',
@@ -901,7 +892,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#dfe4dc',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     padding: 12,
     elevation: 2,
     shadowColor: '#1a2619',
@@ -945,7 +936,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   cardText: {
-    color: '#2e352f',
+    color: colors.text_body,
     fontSize: 13,
     lineHeight: 17,
     flexGrow: 1,
@@ -962,7 +953,7 @@ const styles = StyleSheet.create({
     borderTopColor: '#edf0ea',
   },
   cardDate: {
-    color: '#6c7568',
+    color: colors.text_date,
     fontSize: 12,
     fontFamily: 'MontserratRegular',
     includeFontPadding: false,

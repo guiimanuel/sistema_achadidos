@@ -9,9 +9,8 @@ import {
 } from "react-native";
 import { useState } from "react";
 
-import { sendPasswordResetEmail } from "firebase/auth";
-import { colors } from '../components/colors.js';
-import { auth } from "../utils/firebase.js";
+import { colors } from '../styles/colors.js';
+import { enviarRedefinicaoDeSenha } from "../services/auth.js";
 
 function AlterarSenhaScreen({ navigation }) {
     const [email, setEmail] = useState("");
@@ -21,7 +20,7 @@ function AlterarSenhaScreen({ navigation }) {
             return;
         }
 
-        sendPasswordResetEmail(auth, email)
+        enviarRedefinicaoDeSenha(email)
             .then(() => {
                 alert("E-mail de recuperação enviado com sucesso!");
                 navigation.goBack();
@@ -47,7 +46,7 @@ function AlterarSenhaScreen({ navigation }) {
                 keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={colors.gray_placeholder}
             />
 
             <TouchableOpacity style={styles.button} onPress={recuperarSenha}>
@@ -79,7 +78,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     input: {
-        backgroundColor: "#fff",
+        backgroundColor: colors.white,
         padding: 15,
         borderRadius: 8,
         borderWidth: 1,
@@ -93,7 +92,7 @@ const styles = StyleSheet.create({
         marginBottom: 3,
     },
     buttonText: {
-        color: "#fff",
+        color: colors.white,
         textAlign: "center",
         fontWeight: "bold",
     },

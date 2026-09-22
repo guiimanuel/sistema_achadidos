@@ -2,12 +2,11 @@ import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../components/colors.js';
-import { auth } from '../utils/firebase.js';
 import { useExpoFonts } from '../components/expoFonts.js';
-
+import { colors } from '../styles/colors.js';
+import { entrar } from '../services/auth.js';
+import { KeyboardAvoidingView} from 'react-native-keyboard-controller';
 function LoginScreen({ navigation }) {
   const { fontsLoaded } = useExpoFonts();
 
@@ -25,7 +24,7 @@ function LoginScreen({ navigation }) {
     }
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
+      const userCredential = await entrar(email, senha);
       const user = userCredential.user;
 
       // Passando apenas dados simples/serializáveis (evita o crash no APK)
@@ -41,12 +40,12 @@ function LoginScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container}>
       <StatusBar style="auto" />
 
       {/* Botão de seta fixado no topo esquerdo */}
-      <TouchableOpacity 
-        style={styles.backButton} 
+      <TouchableOpacity
+        style={styles.backButton}
         onPress={() => navigation.navigate('Home')}
       >
         <Ionicons name="arrow-back" size={28} color={colors.green_primary} />
@@ -93,7 +92,7 @@ function LoginScreen({ navigation }) {
           Esqueceu a senha? <Text style={styles.link2}>Alterar</Text>
         </Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -140,7 +139,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     padding: 15,
     marginBottom: 10,
     borderRadius: 8,
@@ -156,7 +155,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.white,
     textAlign: 'center',
     fontFamily: 'MontserratBold',
   },
