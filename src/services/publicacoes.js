@@ -1,7 +1,18 @@
-import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
-import { auth, db } from "../utils/firebase.js";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { auth, db } from "../config/firebase.js";
 
 export const PUBLICACOES_COLLECTION = "itens";
+export const COLECOES_PUBLICACOES = ["itens", "item"];
 
 const MAX_IMAGE_DATA_URL_LENGTH = 800000;
 const SUPPORTED_IMAGE_PATTERN = /^(https?:|data:image\/)/i;
@@ -92,6 +103,37 @@ export async function excluirPublicacao(item) {
   }
 
   await deleteDoc(doc(db, sourceCollection, docId));
+}
+
+export function observarPublicacoes(onCollectionChange, onError) {
+  const unsubscribers = COLECOES_PUBLICACOES.map((collectionName) =>
+    onSnapshot(
+      collection(db, collectionName),
+      (snapshot) => onCollectionChange(collectionName, snapshot.docs),
+      (error) => onError?.(collectionName, error)
+    )
+  );
+
+  return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+}
+
+export function observarMinhasPublicacoes(userId, onChange, onError) {
+  const minhasPublicacoesQuery = query(
+    collection(db, PUBLICACOES_COLLECTION),
+    where("userId", "==", userId)
+  );
+
+  return onSnapshot(
+    minhasPublicacoesQuery,
+    (snapshot) => {
+      const publicacoes = snapshot.docs
+        .map((docSnapshot) => normalizePublicacao(docSnapshot, PUBLICACOES_COLLECTION))
+        .sort((a, b) => getDateMillis(b.createdAt) - getDateMillis(a.createdAt));
+
+      onChange(publicacoes);
+    },
+    onError
+  );
 }
 
 export function normalizePublicacao(docSnapshot, sourceCollection = PUBLICACOES_COLLECTION) {

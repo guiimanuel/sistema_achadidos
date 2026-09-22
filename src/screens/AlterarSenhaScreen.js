@@ -8,9 +8,9 @@ import {
     StyleSheet,
 } from "react-native";
 import { useState } from "react";
-import { sendPasswordResetEmail } from "firebase/auth";
-import { colors } from '../components/colors.js';
-import { auth } from "../utils/firebase.js";
+
+import { colors } from '../styles/colors.js';
+import { enviarRedefinicaoDeSenha } from "../services/auth.js";
 
 function AlterarSenhaScreen({ navigation }) {
     const [email, setEmail] = useState("");
@@ -20,7 +20,7 @@ function AlterarSenhaScreen({ navigation }) {
             return;
         }
 
-        sendPasswordResetEmail(auth, email)
+        enviarRedefinicaoDeSenha(email)
             .then(() => {
                 alert("E-mail de recuperação enviado com sucesso!");
                 navigation.goBack();
@@ -34,21 +34,25 @@ function AlterarSenhaScreen({ navigation }) {
     return (
         <View style={styles.container}>
             <StatusBar style="auto" />
-        
+
             <Text style={styles.title}>ALTERAR SENHA</Text>
             <Text style={styles.subtitle}>
                 Digite o e-mail da sua conta para receber o link de recuperação.
             </Text>
 
+
+      <Text style={styles.titulop}>
+        Email
+      </Text>
             <TextInput
                 placeholder="Email institucional..."
                 style={styles.input}
                 keyboardType="email-address"
                 value={email}
                 onChangeText={setEmail}
-                placeholderTextColor={colors.gray}
+                placeholderTextColor={colors.gray_placeholder}
             />
-    
+
             <TouchableOpacity style={styles.button} onPress={recuperarSenha}>
                 <Text style={styles.buttonText}>Enviar E-mail</Text>
             </TouchableOpacity>
@@ -65,15 +69,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         justifyContent: "center",
-        padding: 65,
+        padding: 56,
         backgroundColor: colors.white_background,
     },
     title: {
-        fontSize: 30,
-        fontWeight: "bold",
-        textAlign: "center",
-        color: colors.green_primary,
-        marginBottom: 20,
+        fontSize: 27,
+                textAlign: "center",
+
+        fontFamily: 'MontserratExtraBold',
     },
     subtitle: {
         textAlign: "center",
@@ -81,7 +84,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     input: {
-        backgroundColor: "#fff",
+        backgroundColor: colors.white,
         padding: 15,
         borderRadius: 8,
         borderWidth: 1,
@@ -94,8 +97,15 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         marginBottom: 3,
     },
+
+    titulop:  {
+    fontSize: 15,
+    marginBottom: 6,
+    color: '#101010',
+    fontFamily: 'MontserratMedium',
+  }, 
     buttonText: {
-        color: "#fff",
+        color: colors.white,
         textAlign: "center",
         fontWeight: "bold",
     },

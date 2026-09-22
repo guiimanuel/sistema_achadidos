@@ -2,9 +2,9 @@ import { StatusBar } from "expo-status-bar";
 import * as React from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { colors } from '../components/colors.js';
-import { auth } from "../utils/firebase.js";
+import { colors } from '../styles/colors.js';
+import { criarConta } from "../services/auth.js";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 function CadastroScreen({ navigation }) {
     const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ function CadastroScreen({ navigation }) {
             alert('É permitido apenas e-mail institucional (@discente.ifpe.edu.br)');
             return;
         }
-        createUserWithEmailAndPassword(auth, emailLimpo, senha)
+        criarConta(emailLimpo, senha)
             .then((userCredential) => {
                 navigation.goBack();
             })
@@ -25,27 +25,35 @@ function CadastroScreen({ navigation }) {
             });
     };
     return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container}>
         <StatusBar style="auto" />
 
         <Text style={styles.title}>CRIAR CONTA</Text>
         <Text style={styles.title1}>Preencha os dados pra se cadastrar</Text>
-        <Text style={styles.title3}>*Apenas email institucional</Text>
+       
+
+         <Text style={styles.titulop}>
+                Email
+              </Text>
+               <Text style={styles.title3}>*Apenas email institucional</Text>
 
         <TextInput
             style={styles.input}
             value={email}
             onChangeText={setEmail}
             placeholder="Novo email..."
-            placeholderTextColor={colors.placeholder}
+            placeholderTextColor={colors.gray_placeholder}
         />
+         <Text style={styles.titulop}>
+                Senha
+              </Text>
 
         <TextInput
             style={styles.input}
             value={senha}
             onChangeText={setSenha}
             placeholder="Nova senha..."
-            placeholderTextColor={colors.placeholder}
+            placeholderTextColor={colors.gray_placeholder}
             secureTextEntry
         />
 
@@ -56,7 +64,7 @@ function CadastroScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.link}>Voltar para login</Text>
         </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
     );
 }
 export default CadastroScreen;
@@ -66,7 +74,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.white_background,
         justifyContent: 'center',
-        padding: 65,
+        padding: 56,
     },
     title: {
         textAlign: 'center',
@@ -85,17 +93,25 @@ const styles = StyleSheet.create({
     title3: {
         justifyContent: 'center',
         color: colors.gray_placeholder,
-        fontSize: 14,
+        fontSize: 12,
         marginBottom: 2,
     },
     input: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.white,
         padding: 15,
         marginBottom: 10,
         borderRadius: 8,
         borderColor: colors.blue_border,
         borderWidth: 1,
     },
+
+     titulop:  {
+    fontSize: 15,
+    marginBottom: 6,
+    color: '#101010',
+    fontFamily: 'MontserratMedium',
+  }, 
+
     button: {
         backgroundColor: colors.green_primary,
         padding: 12,
@@ -105,7 +121,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         fontWeight: 'bold',
-        color: '#fff',
+        color: colors.white,
         textAlign: 'center',
     },
     link: {

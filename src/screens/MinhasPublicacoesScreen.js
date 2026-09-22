@@ -10,24 +10,21 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { onAuthStateChanged } from "firebase/auth";
-import { collection, onSnapshot, query, where } from "firebase/firestore";
-import { auth, db } from "../utils/firebase.js";
+import { observarAutenticacao, usuarioAtual } from "../services/auth.js";
 import {
-  getDateMillis,
-  normalizePublicacao,
-  PUBLICACOES_COLLECTION,
+  observarMinhasPublicacoes,
 } from "../services/publicacoes.js";
+import { colors } from "../styles/colors.js";
 
 function MinhasPublicacoes({ navigation }) {
-  const [currentUser, setCurrentUser] = useState(auth.currentUser);
+  const [currentUser, setCurrentUser] = useState(usuarioAtual);
   const [publicacoes, setPublicacoes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const primeiraLetraUser = currentUser?.email ? currentUser.email.charAt(0).toUpperCase() : "?";
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (user) => {
+    return observarAutenticacao((user) => {
       setCurrentUser(user);
       if (!user) {
         setPublicacoes([]);
@@ -43,18 +40,9 @@ function MinhasPublicacoes({ navigation }) {
 
     setLoading(true);
 
-    const minhasPublicacoesQuery = query(
-      collection(db, PUBLICACOES_COLLECTION),
-      where("userId", "==", currentUser.uid)
-    );
-
-    return onSnapshot(
-      minhasPublicacoesQuery,
-      (snapshot) => {
-        const items = snapshot.docs
-          .map((docSnapshot) => normalizePublicacao(docSnapshot, PUBLICACOES_COLLECTION))
-          .sort((a, b) => getDateMillis(b.createdAt) - getDateMillis(a.createdAt));
-
+    return observarMinhasPublicacoes(
+      currentUser.uid,
+      (items) => {
         setPublicacoes(items);
         setLoading(false);
       },
@@ -82,7 +70,7 @@ function MinhasPublicacoes({ navigation }) {
     if (loading) {
       return (
         <View style={styles.emptyBox}>
-          <ActivityIndicator color="#009933" />
+          <ActivityIndicator color={colors.green_secondary} />
           <Text style={styles.emptyText}>Carregando publicações...</Text>
         </View>
       );
@@ -190,10 +178,10 @@ export default MinhasPublicacoes;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
   },
   topAppBar: {
-    backgroundColor: "#009933",
+    backgroundColor: colors.green_secondary,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -216,7 +204,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "transparent",
     borderWidth: 1.5,
-    borderColor: "#fff",
+    borderColor: colors.white,
     borderRadius: 20,
     height: 35,
     marginHorizontal: 15,
@@ -224,24 +212,24 @@ const styles = StyleSheet.create({
   },
   searchBarInput: {
     flex: 1,
-    color: "#fff",
+    color: colors.white,
   },
   searchIconEmoji: {
     fontSize: 14,
-    color: "#fff",
+    color: colors.white,
   },
   avatarCircle: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     borderWidth: 2,
-    borderColor: "#ccc",
+    borderColor: colors.gray_border,
     justifyContent: "center",
     alignItems: "center",
   },
   avatarText: {
-    color: "#009933",
+    color: colors.green_secondary,
     fontWeight: "bold",
     fontSize: 18,
   },
@@ -253,7 +241,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#009933",
+    color: colors.green_secondary,
     textAlign: "center",
     marginBottom: 20,
   },
@@ -268,26 +256,26 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   muralTabButton: {
-    backgroundColor: "#a3d9a5",
+    backgroundColor: colors.green_light,
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 12,
   },
   muralTabButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "bold",
     fontSize: 16,
   },
   minhasPublicacoesTabButton: {
-    backgroundColor: "#009933",
+    backgroundColor: colors.green_secondary,
     paddingHorizontal: 15,
     paddingVertical: 8,
     borderRadius: 12,
     borderWidth: 1.5,
-    borderColor: "#007722",
+    borderColor: colors.green_dark,
   },
   minhasPublicacoesTabButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "bold",
     fontSize: 16,
   },
@@ -301,7 +289,7 @@ const styles = StyleSheet.create({
   },
   plus: {
     fontSize: 26,
-    color: "#fff",
+    color: colors.white,
     fontWeight: "normal",
     marginTop: -3,
   },
@@ -311,9 +299,9 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: "#000",
+    borderColor: colors.black,
     flex: 0.48,
     padding: 8,
   },
@@ -348,13 +336,13 @@ const styles = StyleSheet.create({
   itemTitle: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "#000",
+    color: colors.black,
     textTransform: "uppercase",
     marginBottom: 5,
   },
   itemDescription: {
     fontSize: 12,
-    color: "#333",
+    color: colors.text_primary,
     lineHeight: 16,
   },
   emptyBox: {
@@ -368,7 +356,7 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: "center",
-    color: "#999",
+    color: colors.gray_muted,
     marginTop: 40,
     fontSize: 16,
   },

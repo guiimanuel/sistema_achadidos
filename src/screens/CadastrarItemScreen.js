@@ -8,11 +8,13 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ScrollView,
 } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
-import { auth } from '../utils/firebase.js';
 import { criarPublicacao } from '../services/publicacoes.js';
-import { colors } from '../components/colors.js';
+import { usuarioAtual } from '../services/auth.js';
+import { colors } from '../styles/colors.js';
 
 const filtros = ['Caderno', 'Material escolar', 'Utensílio pessoal', 'Celular', 'Garrafa'];
 
@@ -25,7 +27,7 @@ function CadastrarItem({ navigation, route }) {
   const imagemRecebida = route?.params?.imagemRecebida || '';
 
   async function publicar() {
-    if (!auth.currentUser) {
+    if (!usuarioAtual()) {
       Alert.alert('Login necessário', 'Entre na sua conta para publicar um item.');
       navigation.navigate('Login');
       return;
@@ -65,7 +67,7 @@ function CadastrarItem({ navigation, route }) {
   }
 
   return (
-    <View style={styles.container}>
+    <KeyboardAwareScrollView style={styles.container}>
       <Text style={styles.title}>Adicionar item</Text>
 
       <TouchableOpacity
@@ -76,8 +78,8 @@ function CadastrarItem({ navigation, route }) {
         {imagemRecebida ? (
           <Image source={{ uri: imagemRecebida }} style={styles.preview} />
         ) : (
-          <Text style={{ color: '#555', fontFamily: 'MontserratMedium', fontSize: 16 }}>
-            <Ionicons name="add-circle-outline" size={22} color="#555" /> Adicionar imagem
+          <Text style={{ color: colors.text_secondary, fontFamily: 'MontserratMedium', fontSize: 16 }}>
+            <Ionicons name="add-circle-outline" size={22} color={colors.text_secondary} /> Adicionar imagem
           </Text>
         )}
       </TouchableOpacity>
@@ -122,12 +124,12 @@ function CadastrarItem({ navigation, route }) {
 
       <TouchableOpacity style={styles.button} onPress={publicar} disabled={publicando}>
         {publicando ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={colors.white} />
         ) : (
           <Text style={styles.buttonText}>Publicar</Text>
         )}
       </TouchableOpacity>
-    </View>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -160,7 +162,7 @@ const styles = StyleSheet.create({
   imageBox: {
     width: '100%',
     height: 150,
-    backgroundColor: '#ddd',
+    backgroundColor: colors.gray_light,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 20,
@@ -183,7 +185,7 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   filterButton: {
-    backgroundColor: '#ddd',
+    backgroundColor: colors.gray_light,
     padding: 10,
     borderRadius: 8,
   },
@@ -205,7 +207,7 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   tag: {
-    backgroundColor: '#ddd',
+    backgroundColor: colors.gray_light,
     padding: 10,
     alignSelf: 'flex-start',
     marginTop: 20,
@@ -221,7 +223,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.white,
     fontFamily: 'MontserratBold',
   },
 });
