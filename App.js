@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { View, Text, StatusBar as RNStatusBar, Platform, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -87,7 +86,11 @@ function App() {
     <KeyboardProvider>
     <SafeAreaProvider>
       <NavigationContainer>
-        <StatusBar style="light" backgroundColor={colors.green_primary} translucent={true} />
+        <RNStatusBar
+          barStyle="light-content"
+          backgroundColor={colors.green_primary}
+          translucent
+        />
 
         <Stack.Navigator initialRouteName="Home">
           <Stack.Screen 

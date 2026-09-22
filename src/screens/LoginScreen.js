@@ -1,12 +1,10 @@
 import * as React from 'react';
-import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useState } from 'react';
-import { Ionicons } from '@expo/vector-icons';
 import { useExpoFonts } from '../components/expoFonts.js';
 import { colors } from '../styles/colors.js';
 import { entrar } from '../services/auth.js';
-import { KeyboardAvoidingView} from 'react-native-keyboard-controller';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 function LoginScreen({ navigation }) {
   const { fontsLoaded } = useExpoFonts();
 
@@ -41,16 +39,6 @@ function LoginScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView style={styles.container}>
-      <StatusBar style="auto" />
-
-      {/* Botão de seta fixado no topo esquerdo */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.navigate('Home')}
-      >
-        <Ionicons name="arrow-back" size={28} color={colors.green_primary} />
-      </TouchableOpacity>
-
       <Image style={styles.image} source={require('../assets/images/caixa.png')} />
       <Text style={styles.title}>BEM VINDO!</Text>
 
@@ -61,7 +49,7 @@ function LoginScreen({ navigation }) {
       <Text style={styles.titulop}>
         Email
       </Text>
-     
+
       <TextInput
         placeholder="Email institucional..."
         style={styles.input}
@@ -128,12 +116,12 @@ const styles = StyleSheet.create({
     fontFamily: 'MontserratMedium',
   },
 
-  titulop:  {
+  titulop: {
     fontSize: 15,
     marginBottom: 6,
     color: '#101010',
     fontFamily: 'MontserratMedium',
-  }, 
+  },
 
   titlemini2: {
     fontSize: 17,
