@@ -30,7 +30,12 @@ function CadastroScreen({ navigation }) {
 
         <Text style={styles.title}>CRIAR CONTA</Text>
         <Text style={styles.title1}>Preencha os dados pra se cadastrar</Text>
-        <Text style={styles.title3}>*Apenas email institucional</Text>
+       
+
+         <Text style={styles.titulop}>
+                Email
+              </Text>
+               <Text style={styles.title3}>*Apenas email institucional</Text>
 
         <TextInput
             style={styles.input}
@@ -39,6 +44,9 @@ function CadastroScreen({ navigation }) {
             placeholder="Novo email..."
             placeholderTextColor={colors.gray_placeholder}
         />
+         <Text style={styles.titulop}>
+                Senha
+              </Text>
 
         <TextInput
             style={styles.input}
@@ -66,7 +74,7 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.white_background,
         justifyContent: 'center',
-        padding: 65,
+        padding: 56,
     },
     title: {
         textAlign: 'center',
@@ -85,7 +93,7 @@ const styles = StyleSheet.create({
     title3: {
         justifyContent: 'center',
         color: colors.gray_placeholder,
-        fontSize: 14,
+        fontSize: 12,
         marginBottom: 2,
     },
     input: {
@@ -96,6 +104,14 @@ const styles = StyleSheet.create({
         borderColor: colors.blue_border,
         borderWidth: 1,
     },
+
+     titulop:  {
+    fontSize: 15,
+    marginBottom: 6,
+    color: '#101010',
+    fontFamily: 'MontserratMedium',
+  }, 
+
     button: {
         backgroundColor: colors.green_primary,
         padding: 12,
