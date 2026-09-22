@@ -16,7 +16,8 @@
         "android.permission.INTERNET",
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES"
-      ]
+      ],
+      "softwareKeyboardLayoutMode": "resize"
     },
     "plugins": [
       [

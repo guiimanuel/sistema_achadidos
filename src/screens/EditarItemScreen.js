@@ -3,14 +3,15 @@ import {
   ActivityIndicator,
   Alert,
   Image,
-  SafeAreaView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 import { atualizarPublicacao, excluirPublicacao } from "../services/publicacoes.js";
+import { colors } from "../styles/colors.js";
 
 const filtros = ["Caderno", "Material escolar", "Utensílio pessoal", "Celular", "Garrafa"];
 
@@ -94,7 +95,7 @@ function EditarItem({ navigation, route }) {
   const desabilitado = salvando || excluindo;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <KeyboardAvoidingView style={styles.safeArea}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} disabled={desabilitado}>
           <Text style={styles.back}>←</Text>
@@ -170,14 +171,14 @@ function EditarItem({ navigation, route }) {
         ) : null}
 
         <TouchableOpacity style={styles.btnPublish} onPress={salvarEdicao} disabled={desabilitado}>
-          {salvando ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Salvar</Text>}
+          {salvando ? <ActivityIndicator color={colors.white} /> : <Text style={styles.btnText}>Salvar</Text>}
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.btnDelete} onPress={confirmarExclusao} disabled={desabilitado}>
-          {excluindo ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Excluir</Text>}
+          {excluindo ? <ActivityIndicator color={colors.white} /> : <Text style={styles.btnText}>Excluir</Text>}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -186,22 +187,22 @@ export default EditarItem;
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
   },
   header: {
-    backgroundColor: "#009933",
+    backgroundColor: colors.green_secondary,
     height: 60,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 15,
   },
   back: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 24,
     marginRight: 20,
   },
   headerTitle: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 20,
     fontWeight: "bold",
   },
@@ -222,7 +223,7 @@ const styles = StyleSheet.create({
   imageBox: {
     width: "100%",
     height: 150,
-    backgroundColor: "#ddd",
+    backgroundColor: colors.gray_light,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 20,
@@ -239,7 +240,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   changeImageText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "bold",
   },
   label: {
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   filterButton: {
-    backgroundColor: "#ddd",
+    backgroundColor: colors.gray_light,
     padding: 10,
     borderRadius: 8,
   },
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
     borderColor: "green",
   },
   tag: {
-    backgroundColor: "#ccc",
+    backgroundColor: colors.gray_border,
     alignSelf: "flex-start",
     paddingVertical: 6,
     paddingHorizontal: 15,
@@ -281,11 +282,11 @@ const styles = StyleSheet.create({
     marginBottom: 30,
   },
   tagText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "bold",
   },
   btnPublish: {
-    backgroundColor: "#009933",
+    backgroundColor: colors.green_secondary,
     paddingVertical: 14,
     borderRadius: 5,
     alignItems: "center",
@@ -294,7 +295,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   btnDelete: {
-    backgroundColor: "#990000",
+    backgroundColor: colors.error_dark,
     paddingVertical: 14,
     borderRadius: 5,
     alignItems: "center",
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   btnText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 18,
     fontWeight: "bold",
   },
