@@ -2,9 +2,9 @@ import { StatusBar } from "expo-status-bar";
 import * as React from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { colors } from '../components/colors.js';
-import { auth } from "../utils/firebase.js";
+import { colors } from '../styles/colors.js';
+import { criarConta } from "../services/auth.js";
+import { KeyboardAvoidingView } from "react-native-keyboard-controller";
 
 function CadastroScreen({ navigation }) {
     const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ function CadastroScreen({ navigation }) {
             alert('É permitido apenas e-mail institucional (@discente.ifpe.edu.br)');
             return;
         }
-        createUserWithEmailAndPassword(auth, emailLimpo, senha)
+        criarConta(emailLimpo, senha)
             .then((userCredential) => {
                 navigation.goBack();
             })
@@ -25,7 +25,7 @@ function CadastroScreen({ navigation }) {
             });
     };
     return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView style={styles.container}>
         <StatusBar style="auto" />
 
         <Text style={styles.title}>CRIAR CONTA</Text>
@@ -42,7 +42,7 @@ function CadastroScreen({ navigation }) {
             value={email}
             onChangeText={setEmail}
             placeholder="Novo email..."
-            placeholderTextColor={colors.placeholder}
+            placeholderTextColor={colors.gray_placeholder}
         />
          <Text style={styles.titulop}>
                 Senha
@@ -53,7 +53,7 @@ function CadastroScreen({ navigation }) {
             value={senha}
             onChangeText={setSenha}
             placeholder="Nova senha..."
-            placeholderTextColor={colors.placeholder}
+            placeholderTextColor={colors.gray_placeholder}
             secureTextEntry
         />
 
@@ -64,7 +64,7 @@ function CadastroScreen({ navigation }) {
         <TouchableOpacity onPress={() => navigation.goBack()}>
             <Text style={styles.link}>Voltar para login</Text>
         </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
     );
 }
 export default CadastroScreen;
@@ -97,7 +97,7 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     input: {
-        backgroundColor: '#fff',
+        backgroundColor: colors.white,
         padding: 15,
         marginBottom: 10,
         borderRadius: 8,
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         fontWeight: 'bold',
-        color: '#fff',
+        color: colors.white,
         textAlign: 'center',
     },
     link: {

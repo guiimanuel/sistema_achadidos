@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
 import {
   useFonts,
@@ -24,9 +25,9 @@ import EscolherImagemEditarScreen from './src/screens/EscolherImagemEditarScreen
 import MinhasPublicacoesScreen from './src/screens/MinhasPublicacoesScreen';
 import PerfilScreen from './src/screens/PerfilScreen';
 
-import { colors } from './src/components/colors';
+import { colors } from './src/styles/colors';
 import { theme } from './src/styles/theme';
-import './src/utils/firebase';
+import './src/config/firebase';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,7 +43,7 @@ const renderHeader = (navigation, showBackButton = false, title = 'ACHADOS E PER
       borderBottomLeftRadius: 20,
       justifyContent: 'center',
       alignItems: 'center',
-      shadowColor: '#000',
+      shadowColor: colors.black,
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.15,
       shadowRadius: 4,
@@ -76,13 +77,14 @@ function App() {
 
   if (!fontsLoaded) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' }}>
-        <ActivityIndicator size="large" color={colors.green_primary || '#009933'} />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white }}>
+        <ActivityIndicator size="large" color={colors.green_primary} />
       </View>
     );
   }
 
   return (
+    <KeyboardProvider>
     <SafeAreaProvider>
       <NavigationContainer>
         <StatusBar style="light" backgroundColor={colors.green_primary} translucent={true} />
@@ -107,7 +109,8 @@ function App() {
           <Stack.Screen name="Perfil" component={PerfilScreen} options={{ headerShown: false }} />
         </Stack.Navigator>
       </NavigationContainer>
-    </SafeAreaProvider>
+      </SafeAreaProvider>
+      </KeyboardProvider>
   );
 }
 

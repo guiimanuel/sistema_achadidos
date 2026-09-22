@@ -13,7 +13,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../components/colors.js';
+import { colors } from '../styles/colors.js';
 
 const logoImage = require('../assets/images/mural-caixa.png');
 const bottleImage = require('../assets/images/garrafa.png');
@@ -204,7 +204,7 @@ function ItemFullScreen({ navigation, route }) {
           style={styles.missingBackButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={22} color="#ffffff" />
+          <Ionicons name="arrow-back" size={22} color={colors.white} />
         </Pressable>
         <Text style={styles.missingTitle}>Publicação não encontrada</Text>
         <Text style={styles.missingText}>Volte para o mural e escolha outro item.</Text>
@@ -214,27 +214,26 @@ function ItemFullScreen({ navigation, route }) {
 
   return (
     <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.content}
-      style={styles.container}
-    >
-      <View style={styles.hero}>
-        <Image source={getImageSource(item)} style={styles.heroImage} resizeMode="cover" />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={22} color="#ffffff" />
-        </Pressable>
-      </View>
-
-      <View style={styles.details}>
-        <Text selectable style={styles.title}>
-          {title}
-        </Text>
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+        style={styles.container}> 
+      <ScrollView
+        contentInsetAdjustmentBehavior="automatic"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.content}
+      >
+        <View style={styles.hero}>
+          <Image source={getImageSource(item)} style={styles.heroImage} resizeMode="cover" />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Voltar"
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Ionicons name="arrow-back" size={22} color={colors.white} />
+          </Pressable>
+        </View>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Descrição</Text>
@@ -264,16 +263,26 @@ function ItemFullScreen({ navigation, route }) {
             <Text style={styles.contactButtonText}>Contatar publicador</Text>
           </Pressable>
 
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.contactButton, styles.institutionButton]}
-            onPress={() => openEmailModal(INSTITUTION_EMAIL, true)}
-          >
-            <Ionicons name="business-outline" size={21} color={colors.green_primary} />
-            <Text style={[styles.contactButtonText, styles.institutionButtonText]}>
-              Contatar DAEE
-            </Text>
-          </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              style={styles.contactButton}
+              onPress={() => openEmailModal(ownerEmail, false)}
+            >
+              <Ionicons name="mail-outline" size={21} color={colors.white} />
+              <Text style={styles.contactButtonText}>Contatar publicador</Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              style={[styles.contactButton, styles.institutionButton]}
+              onPress={() => openEmailModal(INSTITUTION_EMAIL, true)}
+            >
+              <Ionicons name="business-outline" size={21} color={colors.green_primary} />
+              <Text style={[styles.contactButtonText, styles.institutionButtonText]}>
+                Contatar DAEE
+              </Text>
+            </Pressable>
+          </View>
         </View>
       </View>
 
@@ -310,7 +319,7 @@ function ItemFullScreen({ navigation, route }) {
                 <View style={styles.modalHeader}>
                   <Text style={styles.modalTitle}>Enviar Mensagem</Text>
                   <Pressable onPress={() => setModalVisible(false)}>
-                    <Ionicons name="close" size={24} color="#333" />
+                    <Ionicons name="close" size={24} color={colors.text_primary} />
                   </Pressable>
                 </View>
 
@@ -324,7 +333,7 @@ function ItemFullScreen({ navigation, route }) {
                   placeholder="Ex: Maria Clara"
                   value={senderName}
                   onChangeText={setSenderName}
-                  placeholderTextColor={colors.gray_placeholder || '#999'}
+                  placeholderTextColor={colors.gray_placeholder}
                 />
 
                 <Text style={styles.inputLabel}>Assunto</Text>
@@ -333,7 +342,7 @@ function ItemFullScreen({ navigation, route }) {
                   placeholder="Assunto"
                   value={subject}
                   onChangeText={setSubject}
-                  placeholderTextColor={colors.gray_placeholder || '#999'}
+                  placeholderTextColor={colors.gray_placeholder}
                 />
 
                 <Text style={styles.inputLabel}>Mensagem</Text>
@@ -345,7 +354,7 @@ function ItemFullScreen({ navigation, route }) {
                   multiline
                   numberOfLines={5}
                   textAlignVertical="top"
-                  placeholderTextColor={colors.gray_placeholder || '#999'}
+                  placeholderTextColor={colors.gray_placeholder}
                 />
 
                 <View style={styles.modalActions}>
@@ -363,7 +372,7 @@ function ItemFullScreen({ navigation, route }) {
                     disabled={isSending}
                   >
                     {isSending ? (
-                      <ActivityIndicator color="#fff" />
+                      <ActivityIndicator color={colors.white} />
                     ) : (
                       <Text style={styles.sendBtnText}>Enviar</Text>
                     )}
@@ -383,7 +392,7 @@ export default ItemFullScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f6f7f2',
+    backgroundColor: colors.screen_background,
   },
   content: {
     paddingBottom: 32,
@@ -415,7 +424,7 @@ const styles = StyleSheet.create({
     gap: 18,
   },
   title: {
-    color: '#142018',
+    color: colors.text_title,
     fontSize: 28,
     lineHeight: 34,
     fontFamily: 'MontserratExtraBold',
@@ -429,7 +438,7 @@ const styles = StyleSheet.create({
     fontFamily: 'MontserratBold',
   },
   description: {
-    color: '#2e352f',
+    color: colors.text_body,
     fontSize: 16,
     lineHeight: 23,
     fontFamily: 'MontserratMedium',
@@ -440,10 +449,10 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#dfe7db',
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     ...Platform.select({
       ios: {
-        shadowColor: '#243325',
+        shadowColor: colors.shadow_green,
         shadowOffset: { width: 0, height: 3 },
         shadowOpacity: 0.1,
         shadowRadius: 6,
@@ -486,7 +495,7 @@ const styles = StyleSheet.create({
     fontFamily: 'MontserratMedium',
   },
   helpText: {
-    color: '#2e352f',
+    color: colors.text_body,
     textAlign: 'center',
     fontSize: 15,
     lineHeight: 21,
@@ -505,12 +514,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   institutionButton: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderWidth: 1.5,
     borderColor: colors.green_primary,
   },
   contactButtonText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 17,
     lineHeight: 22,
     textAlign: 'center',
@@ -521,7 +530,7 @@ const styles = StyleSheet.create({
   },
   missingContainer: {
     flex: 1,
-    backgroundColor: '#f6f7f2',
+    backgroundColor: colors.screen_background,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
@@ -558,7 +567,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalContainer: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 22,
     width: '100%',
@@ -566,7 +575,7 @@ const styles = StyleSheet.create({
     maxHeight: '85%',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
+        shadowColor: colors.black,
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.25,
         shadowRadius: 10,
@@ -592,17 +601,17 @@ const styles = StyleSheet.create({
   },
   modalSub: {
     fontSize: 13,
-    color: '#555',
+    color: colors.text_secondary,
     marginBottom: 16,
   },
   modalBold: {
     fontFamily: 'MontserratBold',
-    color: '#142018',
+    color: colors.text_title,
   },
   inputLabel: {
     fontSize: 13,
     fontFamily: 'MontserratSemiBold',
-    color: '#333',
+    color: colors.text_primary,
     marginBottom: 6,
   },
   input: {
@@ -614,7 +623,7 @@ const styles = StyleSheet.create({
     fontFamily: 'MontserratMedium',
     fontSize: 14,
     backgroundColor: '#fafafa',
-    color: '#333',
+    color: colors.text_primary,
   },
   textArea: {
     minHeight: 110,
@@ -643,7 +652,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.green_primary,
   },
   sendBtnText: {
-    color: '#ffffff',
+    color: colors.white,
     fontFamily: 'MontserratBold',
   },
   successWrapper: {
@@ -662,7 +671,7 @@ const styles = StyleSheet.create({
   successDescription: {
     fontSize: 15,
     fontFamily: 'MontserratMedium',
-    color: '#555',
+    color: colors.text_secondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 24,
@@ -676,7 +685,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   successBtnText: {
-    color: '#ffffff',
+    color: colors.white,
     fontSize: 16,
     fontFamily: 'MontserratBold',
   },

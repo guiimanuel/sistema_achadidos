@@ -1,14 +1,13 @@
 import * as React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, TouchableOpacity, StyleSheet } from 'react-native';
-import { signOut } from 'firebase/auth';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
-import { auth } from '../utils/firebase.js';
-import { colors } from '../components/colors.js';
+import { colors } from '../styles/colors.js';
+import { sair, usuarioAtual } from '../services/auth.js';
 
 function PerfilScreen({ navigation }) {
   const logoutUser = () => {
-    signOut(auth)
+    sair()
       .then(() => {
         navigation.reset({
           index: 0,
@@ -29,7 +28,7 @@ function PerfilScreen({ navigation }) {
       <View style={styles.header}>
         {/* Botão para voltar à tela anterior facilmente */}
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={28} color="#ffffff" />
+          <Ionicons name="arrow-back" size={28} color={colors.white} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Meu Perfil</Text>
@@ -42,7 +41,7 @@ function PerfilScreen({ navigation }) {
       <View style={styles.container}>
         <Image style={styles.image} source={require('../assets/images/fotoperfil.png')} />
 
-        <Text style={styles.emailText}>{auth.currentUser?.email || 'Usuário não logado'}</Text>
+        <Text style={styles.emailText}>{usuarioAtual()?.email || 'Usuário não logado'}</Text>
 
         {/* BOTÃO ALTERAR SENHA */}
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AlterarSenha')}>
@@ -54,7 +53,7 @@ function PerfilScreen({ navigation }) {
         {/* BOTÃO LOGOUT */}
         <TouchableOpacity style={[styles.button, styles.logoutButton]} onPress={logoutUser}>
           <Text style={styles.logoutButtonText}>
-            <AntDesign name="logout" size={20} color="#be0000" /> Logout
+            <AntDesign name="logout" size={20} color={colors.error} /> Logout
           </Text>
         </TouchableOpacity>
       </View>
@@ -84,7 +83,7 @@ const styles = StyleSheet.create({
     paddingLeft: 5,
   },
   headerTitle: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -111,7 +110,7 @@ const styles = StyleSheet.create({
     borderColor: colors.green_primary, // Borda verde combinando com a logo
   },
   button: {
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     borderWidth: 1.5,
     padding: 14,
     marginBottom: 15,
@@ -129,11 +128,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   logoutButton: {
-    borderColor: '#be0000', // Borda vermelha para o logout
+    borderColor: colors.error, // Borda vermelha para o logout
     marginTop: 10,
   },
   logoutButtonText: {
-    color: '#be0000',
+    color: colors.error,
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 16,
