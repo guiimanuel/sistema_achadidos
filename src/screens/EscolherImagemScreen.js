@@ -10,7 +10,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
-import { colors } from "../components/colors";
+import { colors } from "../styles/colors";
 
 const MAX_IMAGE_DATA_URL_LENGTH = 800000;
 const IMAGE_PICKER_OPTIONS = {
@@ -138,13 +138,13 @@ function EscolherImagem({ navigation, route }) {
             onPress={tirarFoto}
           >
             <View style={styles.iconCircle}>
-              <Ionicons name="camera-outline" size={26} color={colors.green_primary || "#009933"} />
+              <Ionicons name="camera-outline" size={26} color={colors.green_primary} />
             </View>
             <View style={styles.optionTextWrap}>
               <Text style={styles.optionTitle}>Tirar Foto</Text>
               <Text style={styles.optionDescription}>Use a câmera do seu celular</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#c2c9bf" />
+            <Ionicons name="chevron-forward" size={20} color={colors.gray_icon} />
           </Pressable>
 
           <Pressable
@@ -155,13 +155,13 @@ function EscolherImagem({ navigation, route }) {
             onPress={escolherGaleria}
           >
             <View style={styles.iconCircle}>
-              <Ionicons name="images-outline" size={26} color={colors.green_primary || "#009933"} />
+              <Ionicons name="images-outline" size={26} color={colors.green_primary} />
             </View>
             <View style={styles.optionTextWrap}>
               <Text style={styles.optionTitle}>Carregar da Galeria</Text>
               <Text style={styles.optionDescription}>Escolha uma foto salva no dispositivo</Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color="#c2c9bf" />
+            <Ionicons name="chevron-forward" size={20} color={colors.gray_icon} />
           </Pressable>
         </View>
 
@@ -191,13 +191,13 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
   },
   sheetContainer: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingHorizontal: 20,
     paddingTop: 12,
     elevation: 10,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 10,
@@ -212,14 +212,14 @@ const styles = StyleSheet.create({
   },
   sheetTitle: {
     fontSize: 20,
-    color: "#1c261e",
+    color: colors.text_heading,
     fontFamily: "MontserratBold",
     textAlign: "center",
     includeFontPadding: false,
   },
   sheetSubtitle: {
     fontSize: 13,
-    color: "#6b7569",
+    color: colors.text_subtle,
     fontFamily: "MontserratMedium",
     textAlign: "center",
     marginTop: 4,
@@ -247,7 +247,7 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
@@ -259,13 +259,13 @@ const styles = StyleSheet.create({
   },
   optionTitle: {
     fontSize: 15,
-    color: "#1c261e",
+    color: colors.text_heading,
     fontFamily: "MontserratSemiBold",
     includeFontPadding: false,
   },
   optionDescription: {
     fontSize: 12,
-    color: "#6b7569",
+    color: colors.text_subtle,
     fontFamily: "MontserratMedium",
     marginTop: 2,
     includeFontPadding: false,
