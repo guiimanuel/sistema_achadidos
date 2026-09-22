@@ -276,7 +276,6 @@ function ItemFullScreen({ navigation, route }) {
         </View>
       </View>
 
-      {/* MODAL COM FORMULÁRIO OU TELA DE SUCESSO */ }
   <Modal
     animationType="fade"
     transparent={true}
