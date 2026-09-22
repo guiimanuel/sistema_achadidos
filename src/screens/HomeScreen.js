@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import {
   ActivityIndicator,
@@ -555,8 +554,6 @@ function HomeScreen({ navigation }) {
 
   return (
     <KeyboardAvoidingView style={styles.container}>
-      <StatusBar style="light" backgroundColor={colors.green_primary} translucent />
-
       <View style={[styles.topBar, { paddingTop: Math.max(insets.top + 12, 18) }]}>
         <View style={styles.topBarRow}>
           <View style={styles.logoSurface}>
