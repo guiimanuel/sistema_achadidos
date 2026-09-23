@@ -1,4 +1,3 @@
-import { StatusBar } from "expo-status-bar";
 import * as React from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useState } from "react";
@@ -26,8 +25,6 @@ function CadastroScreen({ navigation }) {
     };
     return (
     <KeyboardAvoidingView style={styles.container}>
-        <StatusBar style="auto" />
-
         <Text style={styles.title}>CRIAR CONTA</Text>
         <Text style={styles.title1}>Preencha os dados pra se cadastrar</Text>
        

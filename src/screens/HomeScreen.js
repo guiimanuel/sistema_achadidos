@@ -800,6 +800,7 @@ function HomeScreen({ navigation }) {
   }
 
   return (
+
     <KeyboardAvoidingView
       style={styles.container}
     >
@@ -821,6 +822,13 @@ function HomeScreen({ navigation }) {
               source={logoImage}
               style={styles.logo}
             />
+
+    <KeyboardAvoidingView style={styles.container}>
+      <View style={[styles.topBar, { paddingTop: Math.max(insets.top + 12, 18) }]}>
+        <View style={styles.topBarRow}>
+          <View style={styles.logoSurface}>
+            <Image source={logoImage} style={styles.logo} />
+
           </View>
 
           <Pressable
