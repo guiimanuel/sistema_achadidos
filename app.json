@@ -1,23 +1,36 @@
 {
   "expo": {
-    "name": "sistema_achadidos",
-    "slug": "sistema_achadidos",
-    "version": "1.0.0",
-    "ios": {
-      "bundleIdentifier": "com.sistemaachadidos",
-      "infoPlist": {
-        "NSCameraUsageDescription": "Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.",
-        "NSPhotoLibraryUsageDescription": "Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações."
-      }
+    "name": "system_achadidos",
+    "slug": "system_achadidos",
+    "icon": "./src/icons/icone.png",
+    "version": "1.0.2",
+    "userInterfaceStyle": "light",
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#00000000",
+      "translucent": true
     },
     "android": {
-      "package": "com.sistemaachadidos",
+      "package": "com.systemachadidos",
+      "icon": "./src/icons/mural-caixa.png",
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES"
       ],
-      "softwareKeyboardLayoutMode": "resize"
+      "softwareKeyboardLayoutMode": "resize",
+      "statusBar": {
+        "barStyle": "light-content",
+        "backgroundColor": "#00000000",
+        "translucent": true
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.systemachadidos",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.",
+        "NSPhotoLibraryUsageDescription": "Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações."
+      }
     },
     "plugins": [
       [
