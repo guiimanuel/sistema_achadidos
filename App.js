@@ -3,6 +3,7 @@ import {
   View,
   Text,
   StatusBar as RNStatusBar,
+  Platform,
   ActivityIndicator,
   TouchableOpacity
 } from 'react-native';
@@ -39,7 +40,6 @@ import './src/config/firebase';
 
 const Stack = createNativeStackNavigator();
 
-
 // ===============================
 // HEADER DAS TELAS
 // ===============================
@@ -73,7 +73,6 @@ const renderHeader = (
       position: 'relative',
     }}
   >
-
     {showBackButton && (
       <TouchableOpacity
         style={{
@@ -95,23 +94,19 @@ const renderHeader = (
     <Text style={theme.typography.headerTitle}>
       {title}
     </Text>
-
   </View>
 );
-
 
 // ===============================
 // APP
 // ===============================
 
 function App() {
-
   const [fontsLoaded] = useFonts({
     MontserratSemiBold: Montserrat_600SemiBold,
     MontserratBold: Montserrat_700Bold,
     MontserratExtraBold: Montserrat_800ExtraBold,
   });
-
 
   // ===============================
   // CARREGANDO FONTES
@@ -135,82 +130,55 @@ function App() {
     );
   }
 
-
   // ===============================
   // APLICAÇÃO
   // ===============================
 
   return (
     <KeyboardProvider>
-
       <SafeAreaProvider>
-
         {/* =================================
             STATUS BAR
             ================================= */}
-
         <RNStatusBar
           barStyle="light-content"
           backgroundColor="transparent"
           translucent={true}
         />
 
-
         {/* =================================
             NAVEGAÇÃO
             ================================= */}
-
         <NavigationContainer>
-
-          <Stack.Navigator
-            initialRouteName="Home"
-          >
-
+          <Stack.Navigator initialRouteName="Home">
             {/* LOGIN */}
-
             <Stack.Screen
               name="Login"
               component={LoginScreen}
               options={({ navigation }) => ({
-                header: () =>
-                  renderHeader(
-                    navigation,
-                    true
-                  ),
+                header: () => renderHeader(navigation, true),
               })}
             />
 
-
             {/* ALTERAR SENHA */}
-
             <Stack.Screen
               name="AlterarSenha"
               component={AlterarSenhaScreen}
               options={({ navigation }) => ({
-                header: () =>
-                  renderHeader(
-                    navigation
-                  ),
+                header: () => renderHeader(navigation),
               })}
             />
 
-
             {/* CADASTRO */}
-
             <Stack.Screen
               name="Cadastro"
               component={CadastroScreen}
               options={({ navigation }) => ({
-                header: () =>
-                  renderHeader(
-                    navigation
-                  ),
+                header: () => renderHeader(navigation),
               })}
             />
 
-
             {/* HOME */}
-
             <Stack.Screen
               name="Home"
               component={HomeScreen}
@@ -219,37 +187,25 @@ function App() {
               }}
             />
 
-
             {/* CADASTRAR ITEM */}
-
             <Stack.Screen
               name="CadastrarItem"
               component={CadastrarItemScreen}
               options={({ navigation }) => ({
-                header: () =>
-                  renderHeader(
-                    navigation
-                  ),
+                header: () => renderHeader(navigation),
               })}
             />
 
-
             {/* EDITAR ITEM */}
-
             <Stack.Screen
               name="EditarItem"
               component={EditarItemScreen}
               options={({ navigation }) => ({
-                header: () =>
-                  renderHeader(
-                    navigation
-                  ),
+                header: () => renderHeader(navigation),
               })}
             />
 
-
             {/* ITEM FULL SCREEN */}
-
             <Stack.Screen
               name="ItemFullScreen"
               component={ItemFullScreen}
@@ -258,37 +214,25 @@ function App() {
               }}
             />
 
-
             {/* ESCOLHER IMAGEM */}
-
             <Stack.Screen
               name="EscolherImagem"
               component={EscolherImagemScreen}
               options={({ navigation }) => ({
-                header: () =>
-                  renderHeader(
-                    navigation
-                  ),
+                header: () => renderHeader(navigation),
               })}
             />
 
-
             {/* ESCOLHER IMAGEM EDITAR */}
-
             <Stack.Screen
               name="EscolherImagemEditar"
               component={EscolherImagemEditarScreen}
               options={({ navigation }) => ({
-                header: () =>
-                  renderHeader(
-                    navigation
-                  ),
+                header: () => renderHeader(navigation),
               })}
             />
 
-
             {/* MINHAS PUBLICAÇÕES */}
-
             <Stack.Screen
               name="MinhasPublicacoes"
               component={MinhasPublicacoesScreen}
@@ -297,9 +241,7 @@ function App() {
               }}
             />
 
-
             {/* PERFIL */}
-
             <Stack.Screen
               name="Perfil"
               component={PerfilScreen}
@@ -307,13 +249,9 @@ function App() {
                 headerShown: false,
               }}
             />
-
           </Stack.Navigator>
-
         </NavigationContainer>
-
       </SafeAreaProvider>
-
     </KeyboardProvider>
   );
 }

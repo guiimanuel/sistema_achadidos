@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { StatusBar } from 'expo-status-bar';
 import { Text, View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { colors } from '../styles/colors.js';
@@ -22,8 +21,6 @@ function PerfilScreen({ navigation }) {
 
   return (
     <View style={styles.mainContainer}>
-      <StatusBar style="light" />
-
       {/* HEADER SUPERIOR VERDE */}
       <View style={styles.header}>
         {/* Botão para voltar à tela anterior facilmente */}

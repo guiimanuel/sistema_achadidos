@@ -214,26 +214,26 @@ function ItemFullScreen({ navigation, route }) {
 
   return (
     <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-        style={styles.container}> 
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        <View style={styles.hero}>
-          <Image source={getImageSource(item)} style={styles.heroImage} resizeMode="cover" />
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Voltar"
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={22} color={colors.white} />
-          </Pressable>
-        </View>
+      contentInsetAdjustmentBehavior="automatic"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={styles.content}
+      style={styles.container}>
+      <View style={styles.hero}>
+        <Image source={getImageSource(item)} style={styles.heroImage} resizeMode="cover" />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.white} />
+        </Pressable>
+      </View>
+
+      <View style={styles.details}>
+        <Text selectable style={styles.title}>
+          {title}
+        </Text>
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Descrição</Text>
@@ -263,127 +263,116 @@ function ItemFullScreen({ navigation, route }) {
             <Text style={styles.contactButtonText}>Contatar publicador</Text>
           </Pressable>
 
-            <Pressable
-              accessibilityRole="button"
-              style={styles.contactButton}
-              onPress={() => openEmailModal(ownerEmail, false)}
-            >
-              <Ionicons name="mail-outline" size={21} color={colors.white} />
-              <Text style={styles.contactButtonText}>Contatar publicador</Text>
-            </Pressable>
-
-            <Pressable
-              accessibilityRole="button"
-              style={[styles.contactButton, styles.institutionButton]}
-              onPress={() => openEmailModal(INSTITUTION_EMAIL, true)}
-            >
-              <Ionicons name="business-outline" size={21} color={colors.green_primary} />
-              <Text style={[styles.contactButtonText, styles.institutionButtonText]}>
-                Contatar DAEE
-              </Text>
-            </Pressable>
-          </View>
+          <Pressable
+            accessibilityRole="button"
+            style={[styles.contactButton, styles.institutionButton]}
+            onPress={() => openEmailModal(INSTITUTION_EMAIL, true)}
+          >
+            <Ionicons name="business-outline" size={21} color={colors.green_primary} />
+            <Text style={[styles.contactButtonText, styles.institutionButtonText]}>
+              Contatar DAEE
+            </Text>
+          </Pressable>
         </View>
       </View>
 
-      {/* MODAL COM FORMULÁRIO OU TELA DE SUCESSO */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            {isSuccess ? (
-              <View style={styles.successWrapper}>
-                <Ionicons name="checkmark-circle" size={72} color={colors.green_primary} />
-                <Text style={styles.successTitle}>E-mail enviado com sucesso!</Text>
-                <Text style={styles.successDescription}>
-                  Sua mensagem foi enviada para{' '}
-                  <Text style={styles.modalBold}>{targetEmail}</Text>.
-                </Text>
+  <Modal
+    animationType="fade"
+    transparent={true}
+    visible={modalVisible}
+    onRequestClose={() => setModalVisible(false)}
+  >
+    <View style={styles.modalOverlay}>
+      <View style={styles.modalContainer}>
+        {isSuccess ? (
+          <View style={styles.successWrapper}>
+            <Ionicons name="checkmark-circle" size={72} color={colors.green_primary} />
+            <Text style={styles.successTitle}>E-mail enviado com sucesso!</Text>
+            <Text style={styles.successDescription}>
+              Sua mensagem foi enviada para{' '}
+              <Text style={styles.modalBold}>{targetEmail}</Text>.
+            </Text>
 
-                <Pressable
-                  style={styles.successBtn}
-                  onPress={() => {
-                    setModalVisible(false);
-                    setIsSuccess(false);
-                  }}
-                >
-                  <Text style={styles.successBtnText}>Concluir</Text>
-                </Pressable>
-              </View>
-            ) : (
-              <ScrollView showsVerticalScrollIndicator={false}>
-                <View style={styles.modalHeader}>
-                  <Text style={styles.modalTitle}>Enviar Mensagem</Text>
-                  <Pressable onPress={() => setModalVisible(false)}>
-                    <Ionicons name="close" size={24} color={colors.text_primary} />
-                  </Pressable>
-                </View>
-
-                <Text style={styles.modalSub}>
-                  Destinatário: <Text style={styles.modalBold}>{targetEmail}</Text>
-                </Text>
-
-                <Text style={styles.inputLabel}>Seu Nome / Matrícula</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Ex: Maria Clara"
-                  value={senderName}
-                  onChangeText={setSenderName}
-                  placeholderTextColor={colors.gray_placeholder}
-                />
-
-                <Text style={styles.inputLabel}>Assunto</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Assunto"
-                  value={subject}
-                  onChangeText={setSubject}
-                  placeholderTextColor={colors.gray_placeholder}
-                />
-
-                <Text style={styles.inputLabel}>Mensagem</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  placeholder="Escreva sua mensagem aqui..."
-                  value={message}
-                  onChangeText={setMessage}
-                  multiline
-                  numberOfLines={5}
-                  textAlignVertical="top"
-                  placeholderTextColor={colors.gray_placeholder}
-                />
-
-                <View style={styles.modalActions}>
-                  <Pressable
-                    style={[styles.actionBtn, styles.cancelBtn]}
-                    onPress={() => setModalVisible(false)}
-                    disabled={isSending}
-                  >
-                    <Text style={styles.cancelBtnText}>Cancelar</Text>
-                  </Pressable>
-
-                  <Pressable
-                    style={[styles.actionBtn, styles.sendBtn]}
-                    onPress={handleSendEmail}
-                    disabled={isSending}
-                  >
-                    {isSending ? (
-                      <ActivityIndicator color={colors.white} />
-                    ) : (
-                      <Text style={styles.sendBtnText}>Enviar</Text>
-                    )}
-                  </Pressable>
-                </View>
-              </ScrollView>
-            )}
+            <Pressable
+              style={styles.successBtn}
+              onPress={() => {
+                setModalVisible(false);
+                setIsSuccess(false);
+              }}
+            >
+              <Text style={styles.successBtnText}>Concluir</Text>
+            </Pressable>
           </View>
-        </View>
-      </Modal>
-    </ScrollView>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Enviar Mensagem</Text>
+              <Pressable onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={24} color={colors.text_primary} />
+              </Pressable>
+            </View>
+
+            <Text style={styles.modalSub}>
+              Destinatário: <Text style={styles.modalBold}>{targetEmail}</Text>
+            </Text>
+
+            <Text style={styles.inputLabel}>Seu Nome / Matrícula</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Ex: Maria Clara"
+              value={senderName}
+              onChangeText={setSenderName}
+              placeholderTextColor={colors.gray_placeholder}
+            />
+
+            <Text style={styles.inputLabel}>Assunto</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Assunto"
+              value={subject}
+              onChangeText={setSubject}
+              placeholderTextColor={colors.gray_placeholder}
+            />
+
+            <Text style={styles.inputLabel}>Mensagem</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              placeholder="Escreva sua mensagem aqui..."
+              value={message}
+              onChangeText={setMessage}
+              multiline
+              numberOfLines={5}
+              textAlignVertical="top"
+              placeholderTextColor={colors.gray_placeholder}
+            />
+
+            <View style={styles.modalActions}>
+              <Pressable
+                style={[styles.actionBtn, styles.cancelBtn]}
+                onPress={() => setModalVisible(false)}
+                disabled={isSending}
+              >
+                <Text style={styles.cancelBtnText}>Cancelar</Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.actionBtn, styles.sendBtn]}
+                onPress={handleSendEmail}
+                disabled={isSending}
+              >
+                {isSending ? (
+                  <ActivityIndicator color={colors.white} />
+                ) : (
+                  <Text style={styles.sendBtnText}>Enviar</Text>
+                )}
+              </Pressable>
+            </View>
+          </ScrollView>
+        )}
+      </View>
+    </View>
+  </Modal>
+    </ScrollView >
   );
 }
 
