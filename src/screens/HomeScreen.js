@@ -1,9 +1,6 @@
 import * as React from 'react';
-
 import { useState, useEffect } from 'react';
-
 import { Ionicons } from '@expo/vector-icons';
-
 import {
   ActivityIndicator,
   Animated,
@@ -208,6 +205,9 @@ function normalizeItem(docId, data, sourceCollection) {
     ])
   );
 
+  const status = data.status || 'disponivel';
+  const expiraEm = data.expiraEm || null;
+
   return {
     id: `${sourceCollection}-${docId}`,
     docId,
@@ -219,10 +219,12 @@ function normalizeItem(docId, data, sourceCollection) {
     imageUrl,
     ownerId,
     ownerEmail,
+    status,
+    expiraEm,
     dateText: formatDate(rawDate),
     dateMillis: toMillis(rawDate),
     searchText: normalizeText(
-      `${title} ${description} ${category} ${location}`
+      `${title} ${description} ${category} ${location} ${status}`
     ),
   };
 }
@@ -270,26 +272,19 @@ function HomeScreen({ navigation }) {
   const [activeFilter, setActiveFilter] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
 
-  const [itemsByCollection, setItemsByCollection] =
-    useState({});
+  const [itemsByCollection, setItemsByCollection] = useState({});
+  const [loadedCollections, setLoadedCollections] = useState({});
+  const [collectionErrors, setCollectionErrors] = useState({});
 
-  const [loadedCollections, setLoadedCollections] =
-    useState({});
-
-  const [collectionErrors, setCollectionErrors] =
-    useState({});
-
-  const filterOptionsProgress =
-    React.useRef(new Animated.Value(0)).current;
-
-  const [showFilterOptions, setShowFilterOptions] =
-    useState(false);
+  const filterOptionsProgress = React.useRef(new Animated.Value(0)).current;
+  const [showFilterOptions, setShowFilterOptions] = useState(false);
 
   const primeiraLetraUser = currentUser?.email
     ? currentUser.email.charAt(0).toUpperCase()
     : '?';
 
-  const topPadding = insets.top + 12;
+  // Ajustado para usar apenas o padding exato do topo do dispositivo
+  const topPadding = insets.top;
 
   useEffect(() => {
     return observarAutenticacao((user) => {
@@ -347,8 +342,7 @@ function HomeScreen({ navigation }) {
   }, []);
 
   useEffect(() => {
-    const shouldShowOptions =
-      filterOpen && !activeFilter;
+    const shouldShowOptions = filterOpen && !activeFilter;
 
     if (shouldShowOptions) {
       setShowFilterOptions(true);
@@ -378,17 +372,13 @@ function HomeScreen({ navigation }) {
   ]);
 
   const loading = COLECOES_PUBLICACOES.some(
-    (collectionName) =>
-      !loadedCollections[collectionName]
+    (collectionName) => !loadedCollections[collectionName]
   );
 
   const allItems = React.useMemo(() => {
     return Object.values(itemsByCollection)
       .flat()
-      .sort(
-        (a, b) =>
-          b.dateMillis - a.dateMillis
-      );
+      .sort((a, b) => b.dateMillis - a.dateMillis);
   }, [itemsByCollection]);
 
   const filterOptions = React.useMemo(() => {
@@ -420,12 +410,10 @@ function HomeScreen({ navigation }) {
   useEffect(() => {
     if (!activeFilter) return;
 
-    const hasActiveFilter =
-      filterOptions.some(
-        (filter) =>
-          normalizeText(filter) ===
-          normalizeText(activeFilter)
-      );
+    const hasActiveFilter = filterOptions.some(
+      (filter) =>
+        normalizeText(filter) === normalizeText(activeFilter)
+    );
 
     if (!hasActiveFilter) {
       setActiveFilter('');
@@ -433,35 +421,31 @@ function HomeScreen({ navigation }) {
   }, [activeFilter, filterOptions]);
 
   const filteredItems = React.useMemo(() => {
-    const normalizedSearch =
-      normalizeText(search);
-
-    const normalizedFilter =
-      normalizeText(activeFilter);
+    const agora = Date.now();
+    const normalizedSearch = normalizeText(search);
+    const normalizedFilter = normalizeText(activeFilter);
 
     return allItems.filter((item) => {
+      const jaExpirou =
+        item.status === 'achado' &&
+        item.expiraEm &&
+        agora >= item.expiraEm;
+
+      if (jaExpirou) {
+        return false;
+      }
+
       const matchesSearch =
         !normalizedSearch ||
-        item.searchText.includes(
-          normalizedSearch
-        );
+        item.searchText.includes(normalizedSearch);
 
       const matchesFilter =
         !normalizedFilter ||
-        normalizeText(
-          item.category
-        ).includes(normalizedFilter);
+        normalizeText(item.category).includes(normalizedFilter);
 
-      return (
-        matchesSearch &&
-        matchesFilter
-      );
+      return matchesSearch && matchesFilter;
     });
-  }, [
-    activeFilter,
-    allItems,
-    search,
-  ]);
+  }, [activeFilter, allItems, search]);
 
   const columns =
     width >= 900
@@ -470,11 +454,8 @@ function HomeScreen({ navigation }) {
         ? 3
         : 2;
 
-  const horizontalPadding =
-    width >= 640 ? 24 : 16;
-
-  const cardGap =
-    width >= 640 ? 18 : 12;
+  const horizontalPadding = width >= 640 ? 24 : 16;
+  const cardGap = width >= 640 ? 18 : 12;
 
   const cardWidth = Math.floor(
     (
@@ -488,8 +469,7 @@ function HomeScreen({ navigation }) {
     !loading &&
     filteredItems.length === 0 &&
     allItems.length === 0 &&
-    Object.keys(collectionErrors).length ===
-    COLECOES_PUBLICACOES.length;
+    Object.keys(collectionErrors).length === COLECOES_PUBLICACOES.length;
 
   function handleAuthPress() {
     if (currentUser) {
@@ -508,10 +488,8 @@ function HomeScreen({ navigation }) {
         </Text>
 
         <View style={styles.controlsCard}>
-
           {currentUser ? (
             <>
-              {/* MINHAS PUBLICAÇÕES */}
               <Pressable
                 accessibilityRole="button"
                 style={styles.myPostsButton}
@@ -536,7 +514,6 @@ function HomeScreen({ navigation }) {
                 />
               </Pressable>
 
-              {/* ADICIONAR ITEM */}
               <Pressable
                 accessibilityRole="button"
                 style={styles.addItemButton}
@@ -557,15 +534,13 @@ function HomeScreen({ navigation }) {
             </>
           ) : null}
 
-          {/* FILTRO */}
           <View style={styles.filtersRow}>
             <Pressable
               accessibilityRole="button"
               accessibilityLabel="Abrir filtros"
               style={[
                 styles.filterButton,
-                (filterOpen || activeFilter) &&
-                styles.filterButtonActive,
+                (filterOpen || activeFilter) && styles.filterButtonActive,
               ]}
               onPress={() =>
                 setFilterOpen((open) => !open)
@@ -588,8 +563,7 @@ function HomeScreen({ navigation }) {
               <Text
                 style={[
                   styles.filterButtonText,
-                  (filterOpen || activeFilter) &&
-                  styles.filterButtonTextActive,
+                  (filterOpen || activeFilter) && styles.filterButtonTextActive,
                 ]}
               >
                 Filtrar
@@ -629,18 +603,16 @@ function HomeScreen({ navigation }) {
                   opacity: filterOptionsProgress,
                   transform: [
                     {
-                      translateY:
-                        filterOptionsProgress.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [-8, 0],
-                        }),
+                      translateY: filterOptionsProgress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [-8, 0],
+                      }),
                     },
                     {
-                      scale:
-                        filterOptionsProgress.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [0.98, 1],
-                        }),
+                      scale: filterOptionsProgress.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [0.98, 1],
+                      }),
                     },
                   ],
                 },
@@ -663,7 +635,6 @@ function HomeScreen({ navigation }) {
               ))}
             </Animated.View>
           ) : null}
-
         </View>
       </View>
     );
@@ -672,18 +643,9 @@ function HomeScreen({ navigation }) {
   function renderEmptyState() {
     if (loading) {
       return (
-        <View
-          style={styles.emptyState}
-        >
-          <ActivityIndicator
-            color={
-              colors.green_primary
-            }
-          />
-
-          <Text
-            style={styles.emptyText}
-          >
+        <View style={styles.emptyState}>
+          <ActivityIndicator color={colors.green_primary} />
+          <Text style={styles.emptyText}>
             Carregando publicações...
           </Text>
         </View>
@@ -692,12 +654,8 @@ function HomeScreen({ navigation }) {
 
     if (hasOnlyErrors) {
       return (
-        <View
-          style={styles.emptyState}
-        >
-          <Text
-            style={styles.emptyText}
-          >
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyText}>
             Não foi possível carregar o mural.
           </Text>
         </View>
@@ -705,12 +663,8 @@ function HomeScreen({ navigation }) {
     }
 
     return (
-      <View
-        style={styles.emptyState}
-      >
-        <Text
-          style={styles.emptyText}
-        >
+      <View style={styles.emptyState}>
+        <Text style={styles.emptyText}>
           Nenhuma publicação encontrada
         </Text>
       </View>
@@ -718,6 +672,8 @@ function HomeScreen({ navigation }) {
   }
 
   function renderItem({ item }) {
+    const isAchado = item.status === 'achado';
+
     return (
       <Pressable
         style={[
@@ -728,34 +684,29 @@ function HomeScreen({ navigation }) {
         ]}
         accessibilityRole="button"
         onPress={() =>
-          navigation.navigate(
-            'ItemFullScreen',
-            { item }
-          )
+          navigation.navigate('ItemFullScreen', { item })
         }
       >
-        <View
-          style={
-            styles.cardImageWrap
-          }
-        >
+        <View style={styles.cardImageWrap}>
           <Image
             source={getImageSource(item)}
             style={styles.cardImage}
             resizeMode={
-              item.imageUrl
-                ? 'cover'
-                : 'contain'
+              item.imageUrl ? 'cover' : 'contain'
             }
           />
+
+          {isAchado && (
+            <View style={styles.badgeAchado}>
+              <Text style={styles.badgeAchadoText}>ACHADO</Text>
+            </View>
+          )}
         </View>
 
         {item.category ? (
           <Text
             numberOfLines={1}
-            style={
-              styles.cardCategory
-            }
+            style={styles.cardCategory}
           >
             {item.category}
           </Text>
@@ -772,25 +723,17 @@ function HomeScreen({ navigation }) {
           numberOfLines={5}
           style={styles.cardText}
         >
-          {item.description ||
-            'Sem descrição informada.'}
+          {item.description || 'Sem descrição informada.'}
         </Text>
 
         {item.dateText ? (
-          <View
-            style={styles.cardFooter}
-          >
+          <View style={styles.cardFooter}>
             <Ionicons
               name="calendar-outline"
               size={14}
-              color={
-                colors.text_date
-              }
+              color={colors.text_date}
             />
-
-            <Text
-              style={styles.cardDate}
-            >
+            <Text style={styles.cardDate}>
               {item.dateText}
             </Text>
           </View>
@@ -799,11 +742,9 @@ function HomeScreen({ navigation }) {
     );
   }
 
-  return (
-
-    <KeyboardAvoidingView
-      style={styles.container}
-    >
+  
+return (
+    <KeyboardAvoidingView style={styles.container}>
       <View
         style={[
           styles.topBar,
@@ -812,47 +753,26 @@ function HomeScreen({ navigation }) {
           },
         ]}
       >
-        <View
-          style={styles.topBarRow}
-        >
-          <View
-            style={styles.logoSurface}
-          >
-            <Image
-              source={logoImage}
-              style={styles.logo}
-            />
-
-    <KeyboardAvoidingView style={styles.container}>
-      <View style={[styles.topBar, { paddingTop: Math.max(insets.top + 12, 18) }]}>
         <View style={styles.topBarRow}>
           <View style={styles.logoSurface}>
             <Image source={logoImage} style={styles.logo} />
-
           </View>
+          
 
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={
-              currentUser
-                ? 'Abrir perfil'
-                : 'Ir para login'
+              currentUser ? 'Abrir perfil' : 'Ir para login'
             }
             style={
               currentUser
                 ? styles.profileButton
                 : styles.loginButton
             }
-            onPress={
-              handleAuthPress
-            }
+            onPress={handleAuthPress}
           >
             {currentUser ? (
-              <Text
-                style={
-                  styles.profileInitial
-                }
-              >
+              <Text style={styles.profileInitial}>
                 {primeiraLetraUser}
               </Text>
             ) : (
@@ -860,32 +780,19 @@ function HomeScreen({ navigation }) {
                 <Ionicons
                   name="log-in-outline"
                   size={22}
-                  color={
-                    colors.green_primary
-                  }
+                  color={colors.green_primary}
                 />
-
-                <Text
-                  style={
-                    styles.loginText
-                  }
-                >
-                  Login
-                </Text>
+                <Text style={styles.loginText}>Login</Text>
               </>
             )}
           </Pressable>
         </View>
 
-        <View
-          style={styles.searchBox}
-        >
+        <View style={styles.searchBox}>
           <Ionicons
             name="search"
             size={22}
-            color={
-              colors.green_primary
-            }
+            color={colors.green_primary}
           />
 
           <TextInput
@@ -893,9 +800,7 @@ function HomeScreen({ navigation }) {
             onChangeText={setSearch}
             placeholder="Pesquisar"
             placeholderTextColor="#7f8a7b"
-            style={
-              styles.searchInput
-            }
+            style={styles.searchInput}
           />
 
           {search ? (
@@ -903,9 +808,7 @@ function HomeScreen({ navigation }) {
               accessibilityRole="button"
               accessibilityLabel="Limpar pesquisa"
               hitSlop={8}
-              onPress={() =>
-                setSearch('')
-              }
+              onPress={() => setSearch('')}
             >
               <Ionicons
                 name="close-circle"
@@ -921,30 +824,19 @@ function HomeScreen({ navigation }) {
         key={columns}
         data={filteredItems}
         renderItem={renderItem}
-        keyExtractor={(item) =>
-          item.id
-        }
+        keyExtractor={(item) => item.id}
         numColumns={columns}
-        ListHeaderComponent={
-          renderHeader
-        }
-        ListEmptyComponent={
-          renderEmptyState
-        }
-        showsVerticalScrollIndicator={
-          false
-        }
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={renderEmptyState}
+        showsVerticalScrollIndicator={false}
         contentContainerStyle={[
           styles.listContent,
           {
-            paddingHorizontal:
-              horizontalPadding,
+            paddingHorizontal: horizontalPadding,
           },
         ]}
         columnWrapperStyle={
-          columns > 1
-            ? styles.cardRow
-            : undefined
+          columns > 1 ? styles.cardRow : undefined
         }
         contentInsetAdjustmentBehavior="automatic"
         keyboardShouldPersistTaps="handled"
@@ -958,13 +850,11 @@ export default HomeScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor:
-      colors.screen_background,
+    backgroundColor: colors.screen_background,
   },
 
   topBar: {
-    backgroundColor:
-      colors.green_primary,
+    backgroundColor: colors.green_primary,
     gap: 14,
     paddingHorizontal: 18,
     paddingBottom: 18,
@@ -976,8 +866,7 @@ const styles = StyleSheet.create({
   topBarRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent:
-      'space-between',
+    justifyContent: 'space-between',
     gap: 14,
   },
 
@@ -985,8 +874,7 @@ const styles = StyleSheet.create({
     width: 82,
     height: 70,
     alignItems: 'center',
-    justifyContent:
-      'center',
+    justifyContent: 'center',
   },
 
   logo: {
@@ -998,16 +886,14 @@ const styles = StyleSheet.create({
 
   searchBox: {
     height: 48,
-    backgroundColor:
-      colors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 14,
     elevation: 4,
-    shadowColor:
-      colors.black,
+    shadowColor: colors.black,
     shadowOffset: {
       width: 0,
       height: 3,
@@ -1021,8 +907,7 @@ const styles = StyleSheet.create({
     color: '#1d2b20',
     fontSize: 16,
     paddingVertical: 0,
-    fontFamily:
-      'MontserratSemiBold',
+    fontFamily: 'MontserratSemiBold',
     includeFontPadding: false,
   },
 
@@ -1030,16 +915,13 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor:
-      colors.white,
+    backgroundColor: colors.white,
     borderWidth: 2,
     borderColor: '#d8ded4',
     alignItems: 'center',
-    justifyContent:
-      'center',
+    justifyContent: 'center',
     elevation: 4,
-    shadowColor:
-      colors.black,
+    shadowColor: colors.black,
     shadowOffset: {
       width: 0,
       height: 3,
@@ -1049,11 +931,9 @@ const styles = StyleSheet.create({
   },
 
   profileInitial: {
-    color:
-      colors.green_primary,
+    color: colors.green_primary,
     fontSize: 21,
-    fontFamily:
-      'MontserratExtraBold',
+    fontFamily: 'MontserratExtraBold',
     includeFontPadding: false,
   },
 
@@ -1061,17 +941,14 @@ const styles = StyleSheet.create({
     height: 44,
     minWidth: 96,
     borderRadius: 12,
-    backgroundColor:
-      colors.white,
+    backgroundColor: colors.white,
     alignItems: 'center',
-    justifyContent:
-      'center',
+    justifyContent: 'center',
     flexDirection: 'row',
     gap: 6,
     paddingHorizontal: 14,
     elevation: 4,
-    shadowColor:
-      colors.black,
+    shadowColor: colors.black,
     shadowOffset: {
       width: 0,
       height: 3,
@@ -1081,11 +958,9 @@ const styles = StyleSheet.create({
   },
 
   loginText: {
-    color:
-      colors.green_primary,
+    color: colors.green_primary,
     fontSize: 17,
-    fontFamily:
-      'MontserratBold',
+    fontFamily: 'MontserratBold',
     includeFontPadding: false,
   },
 
@@ -1101,27 +976,23 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    color:
-      colors.green_primary,
+    color: colors.green_primary,
     fontSize: 27,
     textAlign: 'center',
     lineHeight: 32,
-    fontFamily:
-      'MontserratExtraBold',
+    fontFamily: 'MontserratExtraBold',
     includeFontPadding: false,
   },
 
   controlsCard: {
-    backgroundColor:
-      colors.white,
+    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e1e6dc',
     padding: 12,
     gap: 12,
     elevation: 2,
-    shadowColor:
-      colors.shadow_green,
+    shadowColor: colors.shadow_green,
     shadowOffset: {
       width: 0,
       height: 3,
@@ -1139,22 +1010,18 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 42,
     borderRadius: 10,
-    backgroundColor:
-      colors.green_primary,
+    backgroundColor: colors.green_primary,
     alignItems: 'center',
-    justifyContent:
-      'center',
+    justifyContent: 'center',
     flexDirection: 'row',
     gap: 7,
     paddingHorizontal: 10,
   },
 
   myPostsButtonText: {
-    color:
-      colors.white,
+    color: colors.white,
     fontSize: 14,
-    fontFamily:
-      'MontserratBold',
+    fontFamily: 'MontserratBold',
     includeFontPadding: false,
   },
 
@@ -1162,22 +1029,18 @@ const styles = StyleSheet.create({
     flex: 1,
     minHeight: 42,
     borderRadius: 10,
-    backgroundColor:
-      colors.green_primary,
+    backgroundColor: colors.green_primary,
     alignItems: 'center',
-    justifyContent:
-      'center',
+    justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
     paddingHorizontal: 10,
   },
 
   addItemButtonText: {
-    color:
-      colors.white,
+    color: colors.white,
     fontSize: 14,
-    fontFamily:
-      'MontserratBold',
+    fontFamily: 'MontserratBold',
     includeFontPadding: false,
   },
 
@@ -1196,8 +1059,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#cfe0cc',
     alignItems: 'center',
-    justifyContent:
-      'center',
+    justifyContent: 'center',
     flexDirection: 'row',
     gap: 8,
     paddingHorizontal: 12,
@@ -1205,31 +1067,25 @@ const styles = StyleSheet.create({
   },
 
   filterButtonActive: {
-    backgroundColor:
-      colors.green_primary,
-    borderColor:
-      colors.green_primary,
+    backgroundColor: colors.green_primary,
+    borderColor: colors.green_primary,
   },
 
   filterButtonText: {
-    color:
-      colors.green_primary,
+    color: colors.green_primary,
     fontSize: 15,
-    fontFamily:
-      'MontserratBold',
+    fontFamily: 'MontserratBold',
     includeFontPadding: false,
   },
 
   filterButtonTextActive: {
-    color:
-      colors.white,
+    color: colors.white,
   },
 
   activeFilterChip: {
     minHeight: 38,
     borderRadius: 10,
-    backgroundColor:
-      colors.green_soft,
+    backgroundColor: colors.green_soft,
     borderWidth: 1,
     borderColor: '#d8e5d4',
     flexDirection: 'row',
@@ -1242,8 +1098,7 @@ const styles = StyleSheet.create({
   activeFilterText: {
     color: '#315a32',
     fontSize: 14,
-    fontFamily:
-      'MontserratSemiBold',
+    fontFamily: 'MontserratSemiBold',
     includeFontPadding: false,
   },
 
@@ -1259,22 +1114,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f6f2',
     borderWidth: 1,
     borderColor: '#e1e5dd',
-    justifyContent:
-      'center',
+    justifyContent: 'center',
     paddingHorizontal: 12,
   },
 
   filterOptionText: {
     color: '#48544a',
     fontSize: 13,
-    fontFamily:
-      'MontserratSemiBold',
+    fontFamily: 'MontserratSemiBold',
     includeFontPadding: false,
   },
 
   cardRow: {
-    justifyContent:
-      'space-between',
+    justifyContent: 'space-between',
     marginBottom: 12,
   },
 
@@ -1283,8 +1135,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#dfe4dc',
-    backgroundColor:
-      colors.white,
+    backgroundColor: colors.white,
     padding: 12,
     elevation: 2,
     shadowColor: '#1a2619',
@@ -1302,8 +1153,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f3ee',
     borderRadius: 9,
     alignItems: 'center',
-    justifyContent:
-      'center',
+    justifyContent: 'center',
     marginBottom: 12,
     overflow: 'hidden',
   },
@@ -1313,11 +1163,32 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
+  badgeAchado: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#2e7d32',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    elevation: 3,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+  },
+
+  badgeAchadoText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
+  },
+
   cardCategory: {
     alignSelf: 'flex-start',
     maxWidth: '100%',
-    color:
-      colors.green_primary,
+    color: colors.green_primary,
     backgroundColor: '#eef7ec',
     borderRadius: 7,
     overflow: 'hidden',
@@ -1325,8 +1196,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     marginBottom: 7,
-    fontFamily:
-      'MontserratBold',
+    fontFamily: 'MontserratBold',
     includeFontPadding: false,
   },
 
@@ -1334,19 +1204,16 @@ const styles = StyleSheet.create({
     color: '#121a14',
     fontSize: 15,
     marginBottom: 6,
-    fontFamily:
-      'MontserratBold',
+    fontFamily: 'MontserratBold',
     includeFontPadding: false,
   },
 
   cardText: {
-    color:
-      colors.text_body,
+    color: colors.text_body,
     fontSize: 13,
     lineHeight: 17,
     flexGrow: 1,
-    fontFamily:
-      'MontserratRegular',
+    fontFamily: 'MontserratRegular',
     includeFontPadding: false,
   },
 
@@ -1361,11 +1228,9 @@ const styles = StyleSheet.create({
   },
 
   cardDate: {
-    color:
-      colors.text_date,
+    color: colors.text_date,
     fontSize: 12,
-    fontFamily:
-      'MontserratSemiBold',
+    fontFamily: 'MontserratSemiBold',
     includeFontPadding: false,
   },
 
@@ -1379,8 +1244,7 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#557056',
     fontSize: 15,
-    fontFamily:
-      'MontserratSemiBold',
+    fontFamily: 'MontserratSemiBold',
     includeFontPadding: false,
   },
 });
