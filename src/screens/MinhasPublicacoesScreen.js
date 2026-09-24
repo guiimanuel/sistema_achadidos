@@ -29,6 +29,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { db } from '../config/firebase.js';
 import { usuarioAtual } from '../services/auth.js';
 import { colors } from '../styles/colors.js';
+
 const logoImage = require('../assets/images/mural-caixa.png');
 const bottleImage = require('../assets/images/garrafa.png');
 const notebookImage = require('../assets/images/caderno.png');
@@ -198,6 +199,10 @@ function normalizePublicacao(
       data.dataCriacao ||
       data.data ||
       null,
+
+    status: data.status || 'disponivel',
+
+    expiraEm: data.expiraEm || null,
   };
 }
 
@@ -233,6 +238,7 @@ function MinhasPublicacoesScreen({
           );
 
         const minhasPublicacoes = [];
+        const agora = Date.now();
 
         snapshot.forEach(
           (docSnapshot) => {
@@ -262,11 +268,17 @@ function MinhasPublicacoesScreen({
               );
 
             if (pertenceAoUsuario) {
-              minhasPublicacoes.push(
-                normalizePublicacao(
-                  docSnapshot
-                )
-              );
+              const itemNormalizado = normalizePublicacao(docSnapshot);
+
+              // Oculta itens marcados como "achado" que já ultrapassaram o tempo limite
+              const jaExpirou =
+                itemNormalizado.status === 'achado' &&
+                itemNormalizado.expiraEm &&
+                agora >= itemNormalizado.expiraEm;
+
+              if (!jaExpirou) {
+                minhasPublicacoes.push(itemNormalizado);
+              }
             }
           }
         );
@@ -359,8 +371,10 @@ function MinhasPublicacoesScreen({
   }
 
   function renderItem({ item }) {
+    const isAchado = item.status === 'achado';
+
     return (
-      <View style={styles.card}>
+      <View style={[styles.card, isAchado && styles.cardAchado]}>
         <Pressable
           style={styles.cardContent}
           onPress={() =>
@@ -388,6 +402,10 @@ function MinhasPublicacoesScreen({
                     item.userEmail,
                   createdAt:
                     item.createdAt,
+                  status:
+                    item.status,
+                  expiraEm:
+                    item.expiraEm,
                 },
               }
             )
@@ -407,6 +425,11 @@ function MinhasPublicacoesScreen({
                   : 'contain'
               }
             />
+            {isAchado && (
+              <View style={styles.badgeAchado}>
+                <Text style={styles.badgeAchadoText}>ACHADO</Text>
+              </View>
+            )}
           </View>
 
           {item.categoria ? (
@@ -709,6 +732,11 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
 
+  cardAchado: {
+    borderColor: '#2196F3',
+    borderWidth: 1.5,
+  },
+
   cardContent: {
     flex: 1,
   },
@@ -723,11 +751,28 @@ const styles = StyleSheet.create({
       'center',
     overflow: 'hidden',
     marginBottom: 10,
+    position: 'relative',
   },
 
   image: {
     width: '100%',
     height: '100%',
+  },
+
+  badgeAchado: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    backgroundColor: '#2196F3',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+
+  badgeAchadoText: {
+    color: colors.white,
+    fontSize: 9,
+    fontFamily: 'MontserratBold',
   },
 
   category: {

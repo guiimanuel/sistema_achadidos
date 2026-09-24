@@ -2,15 +2,13 @@ import * as React from 'react';
 import {
   View,
   Text,
-  StatusBar as RNStatusBar,
-  Platform,
   ActivityIndicator,
-  TouchableOpacity
+  TouchableOpacity,
 } from 'react-native';
-
+import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -18,7 +16,7 @@ import {
   useFonts,
   Montserrat_600SemiBold,
   Montserrat_700Bold,
-  Montserrat_800ExtraBold
+  Montserrat_800ExtraBold,
 } from '@expo-google-fonts/montserrat';
 
 import LoginScreen from './src/screens/LoginScreen';
@@ -41,61 +39,50 @@ import './src/config/firebase';
 const Stack = createNativeStackNavigator();
 
 // ===============================
-// HEADER DAS TELAS
+// HEADER COMPONENTE COM SAFE AREA
 // ===============================
 
-const renderHeader = (
-  navigation,
-  showBackButton = false,
-  title = 'ACHADOS E PERDIDOS'
-) => (
-  <View
-    style={{
-      height: 60,
-      backgroundColor: colors.green_primary,
+const CustomHeader = ({ navigation, showBackButton = false, title = 'ACHADOS E PERDIDOS' }) => {
+  const insets = useSafeAreaInsets();
 
-      borderBottomRightRadius: 20,
-      borderBottomLeftRadius: 20,
+  return (
+    <View
+      style={{
+        paddingTop: insets.top,
+        backgroundColor: colors.green_primary,
+        borderBottomRightRadius: 20,
+        borderBottomLeftRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 60 + insets.top,
+        shadowColor: colors.black,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
+        elevation: 5,
+        position: 'relative',
+      }}
+    >
+      {showBackButton && (
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            left: 16,
+            top: insets.top + 12,
+            zIndex: 10,
+          }}
+          onPress={() => navigation.navigate('Home')}
+        >
+          <Ionicons name="arrow-back" size={26} color="#fff" />
+        </TouchableOpacity>
+      )}
 
-      justifyContent: 'center',
-      alignItems: 'center',
-
-      shadowColor: colors.black,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.15,
-      shadowRadius: 4,
-
-      elevation: 5,
-
-      position: 'relative',
-    }}
-  >
-    {showBackButton && (
-      <TouchableOpacity
-        style={{
-          position: 'absolute',
-          left: 16,
-          top: 17,
-          zIndex: 10,
-        }}
-        onPress={() => navigation.navigate('Home')}
-      >
-        <Ionicons
-          name="arrow-back"
-          size={26}
-          color="#fff"
-        />
-      </TouchableOpacity>
-    )}
-
-    <Text style={theme.typography.headerTitle}>
-      {title}
-    </Text>
-  </View>
-);
+      <Text style={[theme.typography.headerTitle, { marginBottom: 10 }]}>
+        {title}
+      </Text>
+    </View>
+  );
+};
 
 // ===============================
 // APP
@@ -108,10 +95,6 @@ function App() {
     MontserratExtraBold: Montserrat_800ExtraBold,
   });
 
-  // ===============================
-  // CARREGANDO FONTES
-  // ===============================
-
   if (!fontsLoaded) {
     return (
       <View
@@ -122,33 +105,16 @@ function App() {
           backgroundColor: colors.white,
         }}
       >
-        <ActivityIndicator
-          size="large"
-          color={colors.green_primary}
-        />
+        <ActivityIndicator size="large" color={colors.green_primary} />
       </View>
     );
   }
 
-  // ===============================
-  // APLICAÇÃO
-  // ===============================
-
   return (
     <KeyboardProvider>
       <SafeAreaProvider>
-        {/* =================================
-            STATUS BAR
-            ================================= */}
-        <RNStatusBar
-          barStyle="light-content"
-          backgroundColor="transparent"
-          translucent={true}
-        />
+        <StatusBar style="light" translucent backgroundColor="transparent" />
 
-        {/* =================================
-            NAVEGAÇÃO
-            ================================= */}
         <NavigationContainer>
           <Stack.Navigator initialRouteName="Home">
             {/* LOGIN */}
@@ -156,7 +122,9 @@ function App() {
               name="Login"
               component={LoginScreen}
               options={({ navigation }) => ({
-                header: () => renderHeader(navigation, true),
+                header: () => (
+                  <CustomHeader navigation={navigation} showBackButton={true} />
+                ),
               })}
             />
 
@@ -165,7 +133,7 @@ function App() {
               name="AlterarSenha"
               component={AlterarSenhaScreen}
               options={({ navigation }) => ({
-                header: () => renderHeader(navigation),
+                header: () => <CustomHeader navigation={navigation} />,
               })}
             />
 
@@ -174,7 +142,7 @@ function App() {
               name="Cadastro"
               component={CadastroScreen}
               options={({ navigation }) => ({
-                header: () => renderHeader(navigation),
+                header: () => <CustomHeader navigation={navigation} />,
               })}
             />
 
@@ -191,18 +159,18 @@ function App() {
             <Stack.Screen
               name="CadastrarItem"
               component={CadastrarItemScreen}
-              options={({ navigation }) => ({
-                header: () => renderHeader(navigation),
-              })}
+              options={{
+                headerShown: false,
+              }}
             />
 
             {/* EDITAR ITEM */}
             <Stack.Screen
               name="EditarItem"
               component={EditarItemScreen}
-              options={({ navigation }) => ({
-                header: () => renderHeader(navigation),
-              })}
+              options={{
+                headerShown: false,
+              }}
             />
 
             {/* ITEM FULL SCREEN */}
@@ -219,7 +187,7 @@ function App() {
               name="EscolherImagem"
               component={EscolherImagemScreen}
               options={({ navigation }) => ({
-                header: () => renderHeader(navigation),
+                header: () => <CustomHeader navigation={navigation} />,
               })}
             />
 
@@ -228,7 +196,7 @@ function App() {
               name="EscolherImagemEditar"
               component={EscolherImagemEditarScreen}
               options={({ navigation }) => ({
-                header: () => renderHeader(navigation),
+                header: () => <CustomHeader navigation={navigation} />,
               })}
             />
 

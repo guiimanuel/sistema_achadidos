@@ -3,15 +3,17 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
-  ScrollView,
 } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 import { criarPublicacao } from '../services/publicacoes.js';
 import { usuarioAtual } from '../services/auth.js';
 import { colors } from '../styles/colors.js';
@@ -19,12 +21,14 @@ import { colors } from '../styles/colors.js';
 const filtros = ['Caderno', 'Material escolar', 'Utensílio pessoal', 'Celular', 'Garrafa'];
 
 function CadastrarItem({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const [titulo, setTitulo] = useState('');
   const [descricao, setDescricao] = useState('');
   const [filtroSelecionado, setFiltroSelecionado] = useState('');
   const [publicando, setPublicando] = useState(false);
 
   const imagemRecebida = route?.params?.imagemRecebida || '';
+  const topPadding = insets.top + 10;
 
   async function publicar() {
     if (!usuarioAtual()) {
@@ -67,69 +71,134 @@ function CadastrarItem({ navigation, route }) {
   }
 
   return (
-    <KeyboardAwareScrollView style={styles.container}>
-      <Text style={styles.title}>Adicionar item</Text>
+    <View style={styles.container}>
+      {/* HEADER SUPERIOR */}
+      <View style={[styles.topBar, { paddingTop: topPadding }]}>
+        <Pressable
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          disabled={publicando}
+          hitSlop={10}
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.white} />
+        </Pressable>
 
-      <TouchableOpacity
-        style={styles.imageBox}
-        onPress={() => navigation.navigate('EscolherImagem', { origem: 'CadastrarItem' })}
-        disabled={publicando}
-      >
-        {imagemRecebida ? (
-          <Image source={{ uri: imagemRecebida }} style={styles.preview} />
-        ) : (
-          <Text style={{ color: colors.text_secondary, fontFamily: 'MontserratMedium', fontSize: 16 }}>
-            <Ionicons name="add-circle-outline" size={22} color={colors.text_secondary} /> Adicionar imagem
-          </Text>
-        )}
-      </TouchableOpacity>
+        <Text style={styles.headerTitle}>Cadastrar Item</Text>
 
-      <Text style={styles.filterTitle}>Filtro</Text>
-
-      <View style={styles.filterContainer}>
-        {filtros.map((filtro) => (
-          <TouchableOpacity
-            key={filtro}
-            style={[styles.filterButton, filtroSelecionado === filtro && styles.filterSelected]}
-            onPress={() => setFiltroSelecionado(filtro)}
-            disabled={publicando}
-          >
-            <Text style={{ fontFamily: 'MontserratMedium' }}>{filtro}</Text>
-          </TouchableOpacity>
-        ))}
+        <View style={{ width: 40 }} />
       </View>
 
-      <TextInput
-        placeholder="Adicionar título..."
-        style={styles.input}
-        value={titulo}
-        onChangeText={setTitulo}
-        editable={!publicando}
-      />
+      <KeyboardAwareScrollView
+        contentContainerStyle={styles.scrollContainer}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* SEÇÃO DA IMAGEM */}
+        <Text style={styles.sectionLabel}>Imagem do Item</Text>
+        <View style={styles.imageCard}>
+          <Pressable
+            style={styles.imageBox}
+            onPress={() => navigation.navigate('EscolherImagem', { origem: 'CadastrarItem' })}
+            disabled={publicando}
+          >
+            {imagemRecebida ? (
+              <Image source={{ uri: imagemRecebida }} style={styles.preview} resizeMode="cover" />
+            ) : (
+              <View style={styles.placeholderContainer}>
+                <Ionicons name="camera-outline" size={38} color="#7f8a7b" />
+                <Text style={styles.placeholderText}>Tirar foto ou escolher da galeria</Text>
+              </View>
+            )}
+          </Pressable>
 
-      <TextInput
-        placeholder="Adicionar descrição..."
-        style={[styles.input, styles.textArea]}
-        value={descricao}
-        onChangeText={setDescricao}
-        editable={!publicando}
-        multiline
-      />
-
-      {filtroSelecionado ? (
-        <View style={styles.tag}>
-          <Text style={{ fontFamily: 'MontserratMedium' }}>{filtroSelecionado}</Text>
+          <Pressable
+            style={styles.changeImageButton}
+            onPress={() => navigation.navigate('EscolherImagem', { origem: 'CadastrarItem' })}
+            disabled={publicando}
+          >
+            <Ionicons name={imagemRecebida ? 'image-outline' : 'add-circle-outline'} size={18} color={colors.white} />
+            <Text style={styles.changeImageText}>
+              {imagemRecebida ? 'Alterar Imagem' : 'Adicionar Imagem'}
+            </Text>
+          </Pressable>
         </View>
-      ) : null}
 
-      <TouchableOpacity style={styles.button} onPress={publicar} disabled={publicando}>
-        {publicando ? (
-          <ActivityIndicator color={colors.white} />
-        ) : (
-          <Text style={styles.buttonText}>Publicar</Text>
-        )}
-      </TouchableOpacity>
-    </KeyboardAwareScrollView>
+        {/* CAMPOS DO FORMULÁRIO */}
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Título</Text>
+          <TextInput
+            placeholder="Ex: Caderno Universitário Capa Dura"
+            placeholderTextColor="#8a9286"
+            style={styles.input}
+            value={titulo}
+            onChangeText={setTitulo}
+            editable={!publicando}
+          />
+        </View>
+
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Descrição</Text>
+          <TextInput
+            placeholder="Descreva onde encontrou ou perdeu, cor e detalhes..."
+            placeholderTextColor="#8a9286"
+            style={[styles.input, styles.textArea]}
+            value={descricao}
+            onChangeText={setDescricao}
+            editable={!publicando}
+            multiline
+            numberOfLines={4}
+          />
+        </View>
+
+        {/* CATEGORIAS / FILTROS */}
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Categoria</Text>
+          <View style={styles.filterContainer}>
+            {filtros.map((filtro) => {
+              const selecionado = filtroSelecionado === filtro;
+              return (
+                <Pressable
+                  key={filtro}
+                  style={[
+                    styles.filterChip,
+                    selecionado && styles.filterChipSelected,
+                  ]}
+                  onPress={() => setFiltroSelecionado(filtro)}
+                  disabled={publicando}
+                >
+                  <Text
+                    style={[
+                      styles.filterChipText,
+                      selecionado && styles.filterChipTextSelected,
+                    ]}
+                  >
+                    {filtro}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
+
+        {/* BOTÃO DE PUBLICAR */}
+        <View style={styles.actionButtons}>
+          <Pressable
+            style={styles.button}
+            onPress={publicar}
+            disabled={publicando}
+          >
+            {publicando ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <>
+                <Ionicons name="cloud-upload-outline" size={20} color={colors.white} />
+                <Text style={styles.buttonText}>Publicar Item</Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+      </KeyboardAwareScrollView>
+    </View>
   );
 }
 
@@ -152,78 +221,196 @@ function getPublishErrorMessage(error) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20 },
-  title: {
-    fontSize: 28,
-    fontFamily: 'MontserratBold',
-    color: colors.green_primary,
-    marginVertical: 20,
+  container: {
+    flex: 1,
+    backgroundColor: colors.screen_background,
   },
+
+  topBar: {
+    backgroundColor: colors.green_primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+  },
+
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  headerTitle: {
+    color: colors.white,
+    fontSize: 20,
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
+  },
+
+  scrollContainer: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+
+  sectionLabel: {
+    fontSize: 16,
+    color: '#2c3b2d',
+    fontFamily: 'MontserratBold',
+    marginBottom: 10,
+  },
+
+  imageCard: {
+    backgroundColor: colors.white,
+    borderRadius: 14,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#e1e6dc',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+  },
+
   imageBox: {
     width: '100%',
-    height: 150,
-    backgroundColor: colors.gray_light,
-    justifyContent: 'center',
+    height: 180,
+    backgroundColor: '#f0f3ee',
+    borderRadius: 10,
+    overflow: 'hidden',
     alignItems: 'center',
-    borderRadius: 20,
+    justifyContent: 'center',
   },
+
   preview: {
     width: '100%',
     height: '100%',
-    borderRadius: 20,
   },
-  filterTitle: {
-    fontSize: 26,
+
+  placeholderContainer: {
+    alignItems: 'center',
+    gap: 6,
+  },
+
+  placeholderText: {
+    color: '#7f8a7b',
+    fontSize: 14,
+    fontFamily: 'MontserratSemiBold',
+    textAlign: 'center',
+  },
+
+  changeImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: colors.green_primary,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+
+  changeImageText: {
+    color: colors.white,
+    fontSize: 13,
     fontFamily: 'MontserratBold',
-    color: colors.green_primary,
-    marginTop: 20,
   },
+
+  formGroup: {
+    marginBottom: 18,
+  },
+
+  label: {
+    fontSize: 15,
+    color: '#2c3b2d',
+    fontFamily: 'MontserratSemiBold',
+    marginBottom: 8,
+  },
+
+  input: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: '#dce2d8',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#1d2b20',
+    fontFamily: 'MontserratMedium',
+  },
+
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+
   filterContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
-    marginTop: 20,
+    gap: 8,
   },
-  filterButton: {
-    backgroundColor: colors.gray_light,
-    padding: 10,
-    borderRadius: 8,
-  },
-  filterSelected: {
-    borderWidth: 2,
-    borderColor: colors.green_primary,
-  },
-  input: {
-    borderWidth: 2,
-    marginTop: 20,
-    padding: 10,
+
+  filterChip: {
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: '#d8e2d4',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
     borderRadius: 10,
+  },
+
+  filterChipSelected: {
+    backgroundColor: colors.green_primary,
     borderColor: colors.green_primary,
+  },
+
+  filterChipText: {
+    color: '#48544a',
+    fontSize: 13,
     fontFamily: 'MontserratMedium',
   },
-  textArea: {
-    borderRadius: 10,
-    minHeight: 80,
-    textAlignVertical: 'top',
+
+  filterChipTextSelected: {
+    color: colors.white,
   },
-  tag: {
-    backgroundColor: colors.gray_light,
-    padding: 10,
-    alignSelf: 'flex-start',
-    marginTop: 20,
-    borderRadius: 10,
+
+  actionButtons: {
+    marginTop: 10,
   },
+
   button: {
-    backgroundColor: colors.green_primary,
-    padding: 15,
-    alignItems: 'center',
-    marginTop: 30,
     minHeight: 50,
+    backgroundColor: colors.green_primary,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 15,
+    gap: 8,
+    paddingHorizontal: 16,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
+
   buttonText: {
     color: colors.white,
+    fontSize: 15,
     fontFamily: 'MontserratBold',
+    includeFontPadding: false,
   },
 });
