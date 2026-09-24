@@ -742,7 +742,8 @@ function HomeScreen({ navigation }) {
     );
   }
 
-  return (
+  
+return (
     <KeyboardAvoidingView style={styles.container}>
       <View
         style={[
@@ -756,6 +757,7 @@ function HomeScreen({ navigation }) {
           <View style={styles.logoSurface}>
             <Image source={logoImage} style={styles.logo} />
           </View>
+          
 
           <Pressable
             accessibilityRole="button"

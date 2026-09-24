@@ -1,5 +1,4 @@
 import * as React from "react";
-import { StatusBar } from "expo-status-bar";
 import {
     View,
     Text,
@@ -33,8 +32,6 @@ function AlterarSenhaScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <StatusBar style="auto" />
-
             <Text style={styles.title}>ALTERAR SENHA</Text>
             <Text style={styles.subtitle}>
                 Digite o e-mail da sua conta para receber o link de recuperação.
