@@ -63,6 +63,8 @@ export async function criarPublicacao({ titulo, descricao, filtro, imagem }) {
 
   return addDoc(collection(db, PUBLICACOES_COLLECTION), {
     ...buildItemPayload({ titulo, descricao, filtro, imageUrl }, user),
+    status: "disponivel",
+    expiraEm: null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -89,9 +91,32 @@ export async function atualizarPublicacao(item, { titulo, descricao, filtro, ima
   });
 }
 
+// FUNÇÃO ATUALIZADA: MARCAR COMO ACHADO
+export async function marcarComoAchado(item, horas = 24) {
+  const user = requireCurrentUser();
+  const docId = typeof item === "string" ? item : (item?.docId || item?.id);
+  const sourceCollection = item?.sourceCollection || PUBLICACOES_COLLECTION;
+
+  if (!docId) {
+    throw new Error("Publicação sem identificador.");
+  }
+
+  // Se passares um valor menor que 1 (ex: 0.003), ele aceita frações de hora.
+  // Calcula a expiração com base no valor recebido no parâmetro 'horas'
+  const tempoExpiraEm = Date.now() + Math.round(horas * 60 * 60 * 1000);
+
+  await updateDoc(doc(db, sourceCollection, docId), {
+    status: "achado",
+    expiraEm: tempoExpiraEm,
+    updatedAt: serverTimestamp(),
+  });
+
+  return tempoExpiraEm;
+}
+
 export async function excluirPublicacao(item) {
   const user = requireCurrentUser();
-  const docId = item?.docId || item?.id;
+  const docId = typeof item === "string" ? item : (item?.docId || item?.id);
   const sourceCollection = item?.sourceCollection || PUBLICACOES_COLLECTION;
 
   if (!docId) {
@@ -149,6 +174,8 @@ export function normalizePublicacao(docSnapshot, sourceCollection = PUBLICACOES_
     imageUrl: data.imageUrl || data.imagem || data.fotoUrl || "",
     userId: data.userId || data.uid || "",
     userEmail: data.userEmail || data.email || "",
+    status: data.status || "disponivel",
+    expiraEm: data.expiraEm || null,
     createdAt: data.createdAt || data.dataCriacao || data.data || null,
     updatedAt: data.updatedAt || null,
   };
