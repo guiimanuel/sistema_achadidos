@@ -1,7 +1,7 @@
 {
   "name": "sistema_achadidos",
   "version": "1.0.0",
-  "main": "./src/index.js",
+  "main": "node_modules/expo/AppEntry.js",
   "dependencies": {
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo/ngrok": "^4.1.3",
