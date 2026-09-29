@@ -213,13 +213,14 @@ function ItemFullScreen({ navigation, route }) {
   }
 
   return (
+    <>
     <ScrollView
       contentInsetAdjustmentBehavior="automatic"
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.content}
       style={styles.container}>
       <View style={styles.hero}>
-        <Image source={getImageSource(item)} style={styles.heroImage} resizeMode="cover" />
+        <Image source={getImageSource(item)} style={styles.heroImage} resizeMode="contain" />
         <Pressable
           accessibilityRole="button"
           accessibilityLabel="Voltar"
@@ -276,6 +277,7 @@ function ItemFullScreen({ navigation, route }) {
         </View>
       </View>
 
+    </ScrollView>
   <Modal
     animationType="fade"
     transparent={true}
@@ -372,7 +374,7 @@ function ItemFullScreen({ navigation, route }) {
       </View>
     </View>
   </Modal>
-    </ScrollView >
+    </>
   );
 }
 
@@ -388,7 +390,7 @@ const styles = StyleSheet.create({
   },
   hero: {
     width: '100%',
-    height: 310,
+    height: 370,
     backgroundColor: '#e5ebe1',
   },
   heroImage: {
@@ -397,7 +399,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 44 : 24,
+    top: Platform.OS === 'ios' ? 44 : 64,
     left: 16,
     width: 44,
     height: 44,
@@ -527,7 +529,7 @@ const styles = StyleSheet.create({
   },
   missingBackButton: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 44 : 24,
+    top: Platform.OS === 'ios' ? 44 : 64,
     left: 16,
     width: 44,
     height: 44,

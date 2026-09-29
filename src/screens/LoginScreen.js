@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useExpoFonts } from '../components/expoFonts.js';
 import { colors } from '../styles/colors.js';
 import { entrar } from '../services/auth.js';
-import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 
 function LoginScreen({ navigation }) {
   const { fontsLoaded } = useExpoFonts();
@@ -47,7 +47,12 @@ function LoginScreen({ navigation }) {
   };
 
   return (
-    <KeyboardAvoidingView style={styles.container}>
+    <KeyboardAwareScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+      bottomOffset={24}
+      keyboardShouldPersistTaps="handled"
+    >
       <Image style={styles.image} source={require('../assets/images/caixa.png')} />
       <Text style={styles.title}>BEM VINDO!</Text>
 
@@ -55,36 +60,37 @@ function LoginScreen({ navigation }) {
         Faça o seu login com <Text style={styles.titlemini2}>email e senha</Text>
       </Text>
 
-      <Text style={styles.titulop}>
-        Email
-      </Text>
+      <View style={styles.form}>
+        <Text style={styles.titulop}>
+          Email
+        </Text>
 
-      <TextInput
-        placeholder="Email de Servidor..."
-        style={styles.input}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-        placeholderTextColor={colors.gray_placeholder}
-      />
+        <TextInput
+          placeholder="Email de Servidor..."
+          style={styles.input}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          value={email}
+          onChangeText={setEmail}
+          placeholderTextColor={colors.gray_placeholder}
+        />
 
-      <Text style={styles.titulop}>
-        Senha
-      </Text>
+        <Text style={styles.titulop}>
+          Senha
+        </Text>
 
-      <TextInput
-        placeholder="Senha..."
-        secureTextEntry
-        style={styles.input}
-        value={senha}
-        onChangeText={setSenha}
-        placeholderTextColor={colors.gray_placeholder}
-      />
+        <TextInput
+          placeholder="Senha..."
+          secureTextEntry
+          style={styles.input}
+          value={senha}
+          onChangeText={setSenha}
+          placeholderTextColor={colors.gray_placeholder}
+        />
 
-      <TouchableOpacity style={styles.button} onPress={signInUser}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={signInUser}>
+          <Text style={styles.buttonText}>Login</Text>
+        </TouchableOpacity>
 
       <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
         <Text style={styles.link}>
@@ -119,7 +125,8 @@ function LoginScreen({ navigation }) {
           </View>
         </View>
       </Modal>
-    </KeyboardAvoidingView>
+      </View>
+    </KeyboardAwareScrollView>
   );
 }
 
@@ -129,9 +136,17 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: colors.white_background,
     flex: 1,
+  },
+  contentContainer: {
+    flexGrow: 1,
     justifyContent: 'center',
-    padding: 56,
-    position: 'relative',
+    paddingVertical: 56,
+    paddingHorizontal: 24,
+  },
+  form: {
+    width: '100%',
+    maxWidth: 350,
+    alignSelf: 'center',
   },
   title: {
     fontSize: 30,
@@ -142,7 +157,7 @@ const styles = StyleSheet.create({
   },
   titlemini: {
     fontSize: 18,
-    marginBottom: 65,
+    marginBottom: 80,
     textAlign: 'center',
     color: colors.green_primary,
     fontFamily: 'MontserratMedium',
@@ -150,7 +165,7 @@ const styles = StyleSheet.create({
 
   titulop: {
     fontSize: 15,
-    marginBottom: 6,
+    marginBottom: 4,
     color: '#101010',
     fontFamily: 'MontserratMedium',
   },
@@ -168,19 +183,29 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: colors.white,
-    padding: 15,
-    marginBottom: 18,
+    marginBottom: 15,
     borderRadius: 8,
     borderColor: colors.blue_border,
     borderWidth: 1,
     fontFamily: 'MontserratRegular',
+    fontSize: 16,
+    lineHeight: 22,
+    width: '100%',
+    height: 55,
+    paddingHorizontal: 16,
+    paddingVertical: 0,
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
   button: {
     backgroundColor: colors.green_primary,
     padding: 12,
-    marginBottom: 11,
+    marginBottom: 20,
     marginTop: 30,
     borderRadius: 8,
+    width: '100%',
+    height: 55,
+    justifyContent: 'center',
   },
   buttonText: {
     color: colors.white,

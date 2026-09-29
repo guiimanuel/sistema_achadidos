@@ -111,9 +111,16 @@ function App() {
   }
 
   return (
-    <KeyboardProvider>
-      <SafeAreaProvider>
-        <StatusBar style="light" translucent backgroundColor="transparent" />
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: colors.green_primary }}>
+      <KeyboardProvider statusBarTranslucent preserveEdgeToEdge>
+        {/* =================================
+            STATUS BAR
+            ================================= */}
+        <RNStatusBar
+          barStyle="light-content"
+          backgroundColor="transparent"
+          translucent={true}
+        />
 
         <NavigationContainer>
           <Stack.Navigator initialRouteName="Home">
@@ -152,6 +159,9 @@ function App() {
               component={HomeScreen}
               options={{
                 headerShown: false,
+                statusBarTranslucent: true,
+                statusBarStyle: 'light',
+                contentStyle: { backgroundColor: colors.green_primary },
               }}
             />
 
@@ -219,8 +229,8 @@ function App() {
             />
           </Stack.Navigator>
         </NavigationContainer>
-      </SafeAreaProvider>
-    </KeyboardProvider>
+      </KeyboardProvider>
+    </SafeAreaProvider>
   );
 }
 
