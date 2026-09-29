@@ -10,7 +10,7 @@ import {
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -44,57 +44,68 @@ const Stack = createNativeStackNavigator();
 // HEADER DAS TELAS
 // ===============================
 
-const renderHeader = (
+function AppHeader({
   navigation,
   showBackButton = false,
-  title = 'ACHADOS E PERDIDOS'
-) => (
-  <View
-    style={{
-      height: 60,
-      backgroundColor: colors.green_primary,
+  title = 'ACHADOS E PERDIDOS',
+}) {
+  const insets = useSafeAreaInsets();
+  const topInset = Platform.OS === 'android'
+    ? Math.max(insets.top, RNStatusBar.currentHeight || 0)
+    : insets.top;
 
-      borderBottomRightRadius: 20,
-      borderBottomLeftRadius: 20,
+  return (
+    <View
+      style={{
+        height: 60 + topInset,
+        paddingTop: topInset,
+        backgroundColor: colors.green_primary,
+        borderBottomRightRadius: 20,
+        borderBottomLeftRadius: 20,
 
-      justifyContent: 'center',
-      alignItems: 'center',
+        justifyContent: 'center',
+        alignItems: 'center',
 
-      shadowColor: colors.black,
-      shadowOffset: {
-        width: 0,
-        height: 2,
-      },
-      shadowOpacity: 0.15,
-      shadowRadius: 4,
+        shadowColor: colors.black,
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.15,
+        shadowRadius: 4,
 
-      elevation: 5,
+        elevation: 5,
 
-      position: 'relative',
-    }}
-  >
-    {showBackButton && (
-      <TouchableOpacity
-        style={{
-          position: 'absolute',
-          left: 16,
-          top: 17,
-          zIndex: 10,
-        }}
-        onPress={() => navigation.navigate('Home')}
-      >
-        <Ionicons
-          name="arrow-back"
-          size={26}
-          color="#fff"
-        />
-      </TouchableOpacity>
-    )}
+        position: 'relative',
+      }}
+    >
+      {showBackButton && (
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            left: 16,
+            top: topInset + 17,
+            zIndex: 10,
+          }}
+          onPress={() => navigation.navigate('Home')}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={26}
+            color="#fff"
+          />
+        </TouchableOpacity>
+      )}
 
-    <Text style={theme.typography.headerTitle}>
-      {title}
-    </Text>
-  </View>
+      <Text style={theme.typography.headerTitle}>
+        {title}
+      </Text>
+    </View>
+  );
+}
+
+const renderHeader = (navigation, showBackButton = false, title) => (
+  <AppHeader navigation={navigation} showBackButton={showBackButton} title={title} />
 );
 
 // ===============================
@@ -135,8 +146,8 @@ function App() {
   // ===============================
 
   return (
-    <KeyboardProvider>
-      <SafeAreaProvider>
+    <SafeAreaProvider style={{ flex: 1, backgroundColor: colors.green_primary }}>
+      <KeyboardProvider statusBarTranslucent preserveEdgeToEdge>
         {/* =================================
             STATUS BAR
             ================================= */}
@@ -184,6 +195,9 @@ function App() {
               component={HomeScreen}
               options={{
                 headerShown: false,
+                statusBarTranslucent: true,
+                statusBarStyle: 'light',
+                contentStyle: { backgroundColor: colors.green_primary },
               }}
             />
 
@@ -251,8 +265,8 @@ function App() {
             />
           </Stack.Navigator>
         </NavigationContainer>
-      </SafeAreaProvider>
-    </KeyboardProvider>
+      </KeyboardProvider>
+    </SafeAreaProvider>
   );
 }
 
