@@ -4,6 +4,7 @@
     "slug": "system_achadidos",
     "icon": "./src/icons/icone.png",
     "version": "1.0.2",
+    "backgroundColor": "#059600",
     "userInterfaceStyle": "light",
     "androidStatusBar": {
       "barStyle": "light-content",
@@ -18,12 +19,7 @@
         "android.permission.CAMERA",
         "android.permission.READ_MEDIA_IMAGES"
       ],
-      "softwareKeyboardLayoutMode": "resize",
-      "statusBar": {
-        "barStyle": "light-content",
-        "backgroundColor": "#00000000",
-        "translucent": true
-      }
+      "softwareKeyboardLayoutMode": "resize"
     },
     "ios": {
       "bundleIdentifier": "com.systemachadidos",
