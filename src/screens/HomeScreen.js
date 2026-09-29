@@ -742,17 +742,9 @@ function HomeScreen({ navigation }) {
     );
   }
 
-  
-return (
+  return (
     <KeyboardAvoidingView style={styles.container}>
-      <View
-        style={[
-          styles.topBar,
-          {
-            paddingTop: topPadding,
-          },
-        ]}
-      >
+      <View style={[styles.topBar, { paddingTop: topPadding }]}>
         <View style={styles.topBarRow}>
           <View style={styles.logoSurface}>
             <Image source={logoImage} style={styles.logo} />
