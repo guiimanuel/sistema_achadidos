@@ -1,7 +1,7 @@
+import { AppAlert as Alert } from '../services/alerts.js';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Modal,
   Platform,
@@ -13,7 +13,11 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors.js';
+import { theme } from '../styles/theme.js';
+
+const HERO_BACKGROUND = '#e5ebe1';
 
 const logoImage = require('../assets/images/mural-caixa.png');
 const bottleImage = require('../assets/images/garrafa.png');
@@ -111,6 +115,7 @@ function InfoRow({ icon, label, value }) {
 }
 
 function ItemFullScreen({ navigation, route }) {
+  const insets = useSafeAreaInsets();
   const item = route?.params?.item;
 
   const title = firstValue(item, ['title', 'titulo', 'nome', 'name'], 'Item sem título');
@@ -195,40 +200,43 @@ function ItemFullScreen({ navigation, route }) {
     }
   }
 
+  const header = (
+    <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Voltar"
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Ionicons name="arrow-back" size={28} color={colors.white} />
+      </Pressable>
+      <Text style={styles.headerTitle}>Achados e Perdidos</Text>
+      <View style={{ width: 48 }} />
+    </View>
+  );
+
   if (!item) {
     return (
-      <View style={styles.missingContainer}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          style={styles.missingBackButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
-        </Pressable>
-        <Text style={styles.missingTitle}>Publicação não encontrada</Text>
-        <Text style={styles.missingText}>Volte para o mural e escolha outro item.</Text>
+      <View style={styles.container}>
+        {header}
+        <View style={[styles.missingContainer, styles.headerUnderlap]}>
+          <Text style={styles.missingTitle}>Publicação não encontrada</Text>
+          <Text style={styles.missingText}>Volte para o mural e escolha outro item.</Text>
+        </View>
       </View>
     );
   }
 
   return (
-    <>
+    <View style={styles.container}>
+    {header}
     <ScrollView
-      contentInsetAdjustmentBehavior="automatic"
+      contentInsetAdjustmentBehavior="never"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.content}
-      style={styles.container}>
+      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
+      style={[styles.container, styles.headerUnderlap]}>
       <View style={styles.hero}>
         <Image source={getImageSource(item)} style={styles.heroImage} resizeMode="contain" />
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Voltar"
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
-        </Pressable>
       </View>
 
       <View style={styles.details}>
@@ -374,7 +382,7 @@ function ItemFullScreen({ navigation, route }) {
       </View>
     </View>
   </Modal>
-    </>
+    </View>
   );
 }
 
@@ -391,23 +399,43 @@ const styles = StyleSheet.create({
   hero: {
     width: '100%',
     height: 370,
-    backgroundColor: '#e5ebe1',
+    backgroundColor: HERO_BACKGROUND,
   },
   heroImage: {
     width: '100%',
     height: '100%',
   },
+  headerUnderlap: {
+    marginTop: -18,
+  },
+  header: {
+    backgroundColor: colors.green_primary,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    elevation: 4,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    zIndex: 1,
+  },
+  headerTitle: {
+    ...theme.typography.headerTitle,
+    flex: 1,
+    textAlign: 'center',
+  },
   backButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 44 : 64,
-    left: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(0, 0, 0, 0.46)',
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
   },
   details: {
     paddingHorizontal: 18,
@@ -526,17 +554,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 24,
     gap: 10,
-  },
-  missingBackButton: {
-    position: 'absolute',
-    top: Platform.OS === 'ios' ? 44 : 64,
-    left: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.green_primary,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   missingTitle: {
     color: colors.green_primary,

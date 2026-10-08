@@ -1,6 +1,6 @@
+import { AppAlert as Alert } from '../services/alerts.js';
 import React from "react";
 import {
-  Alert,
   Linking,
   Pressable,
   StyleSheet,

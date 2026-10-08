@@ -1,7 +1,7 @@
+import { AppAlert as Alert } from '../services/alerts.js';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -28,7 +28,7 @@ function CadastrarItem({ navigation, route }) {
   const [publicando, setPublicando] = useState(false);
 
   const imagemRecebida = route?.params?.imagemRecebida || '';
-  const topPadding = insets.top + 10;
+  const topPadding = insets.top + 16;
 
   async function publicar() {
     if (!usuarioAtual()) {
@@ -42,8 +42,18 @@ function CadastrarItem({ navigation, route }) {
       return;
     }
 
+    if (!descricao.trim()) {
+      Alert.alert('Descrição obrigatória', 'Informe uma descrição para a publicação.');
+      return;
+    }
+
     if (!filtroSelecionado) {
       Alert.alert('Filtro obrigatório', 'Escolha uma categoria para a publicação.');
+      return;
+    }
+
+    if (!String(imagemRecebida).trim()) {
+      Alert.alert('Imagem obrigatória', 'Adicione uma foto do item antes de publicar.');
       return;
     }
 
@@ -80,12 +90,12 @@ function CadastrarItem({ navigation, route }) {
           disabled={publicando}
           hitSlop={10}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.white} />
+          <Ionicons name="arrow-back" size={28} color={colors.white} />
         </Pressable>
 
         <Text style={styles.headerTitle}>Cadastrar Item</Text>
 
-        <View style={{ width: 40 }} />
+        <View style={{ width: 48 }} />
       </View>
 
       <KeyboardAwareScrollView
@@ -163,7 +173,9 @@ function CadastrarItem({ navigation, route }) {
                     styles.filterChip,
                     selecionado && styles.filterChipSelected,
                   ]}
-                  onPress={() => setFiltroSelecionado(filtro)}
+                  onPress={() => setFiltroSelecionado((atual) => atual === filtro ? '' : filtro)}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: selecionado, disabled: publicando }}
                   disabled={publicando}
                 >
                   <Text
@@ -243,15 +255,17 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   headerTitle: {
+    flex: 1,
+    textAlign: 'center',
     color: colors.white,
     fontSize: 20,
     fontFamily: 'MontserratBold',

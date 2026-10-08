@@ -1,5 +1,6 @@
+import { AppAlert as Alert } from '../services/alerts.js';
 import * as React from 'react';
-import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useState } from 'react';
 import { useExpoFonts } from '../components/expoFonts.js';
 import { colors } from '../styles/colors.js';
@@ -11,23 +12,14 @@ function LoginScreen({ navigation }) {
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertTitle, setAlertTitle] = useState('');
-  const [alertMessage, setAlertMessage] = useState('');
 
   if (!fontsLoaded) {
     return null;
   }
 
-  const showAlert = (title, message) => {
-    setAlertTitle(title);
-    setAlertMessage(message);
-    setAlertVisible(true);
-  };
-
   const signInUser = async () => {
     if (!email.trim() || !senha.trim()) {
-      showAlert('Campos vazios', 'Por favor, preencha os campos de e-mail e senha com as informações fornecidas aos servidores.');
+      Alert.alert('Campos vazios', 'Por favor, preencha os campos de e-mail e senha com as informações fornecidas aos servidores.');
       return;
     }
 
@@ -42,7 +34,7 @@ function LoginScreen({ navigation }) {
 
     } catch (error) {
       console.log('Erro de autenticação:', error);
-      showAlert('Erro ao Logar', 'E-mail ou senha inválido. ATENÇÂO: Login permitido apenas para Servidores.');
+      Alert.alert('Erro ao Logar', 'E-mail ou senha inválido. ATENÇÂO: Login permitido apenas para Servidores.');
     }
   };
 
@@ -66,7 +58,7 @@ function LoginScreen({ navigation }) {
         </Text>
 
         <TextInput
-          placeholder="Email de Servidor..."
+          placeholder="Digite seu email..."
           style={styles.input}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -80,10 +72,12 @@ function LoginScreen({ navigation }) {
         </Text>
 
         <TextInput
-          placeholder="Senha..."
+          placeholder="Digite sua senha..."
           secureTextEntry
           style={styles.input}
           value={senha}
+          autoCapitalize="none"
+          autoCorrect={false}
           onChangeText={setSenha}
           placeholderTextColor={colors.gray_placeholder}
         />
@@ -104,27 +98,6 @@ function LoginScreen({ navigation }) {
         </Text>
       </TouchableOpacity>
 
-      <Modal
-        transparent={true}
-        visible={alertVisible}
-        animationType="fade"
-        onRequestClose={() => setAlertVisible(false)}
-      >
-        <View style={styles.alertContainer}>
-          <View style={styles.alertBox}>
-            <Text style={styles.alertTitle}>{alertTitle}</Text>
-
-            <Text style={styles.alertMessage}>{alertMessage}</Text>
-
-            <TouchableOpacity
-              style={styles.alertButton}
-              onPress={() => setAlertVisible(false)}
-            >
-              <Text style={styles.alertButtonText}>OK</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
       </View>
     </KeyboardAwareScrollView>
   );
@@ -223,47 +196,4 @@ const styles = StyleSheet.create({
     fontFamily: 'MontserratBold',
   },
 
-  alertContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-
-  alertBox: {
-    width: '80%',
-    backgroundColor: '#d20000',
-    borderRadius: 12,
-    padding: 24,
-    alignItems: 'center',
-  },
-
-  alertTitle: {
-    fontSize: 20,
-    color: colors.white,
-    fontFamily: 'MontserratBold',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-
-  alertMessage: {
-    fontSize: 15,
-    color: colors.white,
-    fontFamily: 'MontserratMedium',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-
-  alertButton: {
-    backgroundColor: colors.white,
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-  },
-
-  alertButtonText: {
-    color: '#da0000',
-    fontFamily: 'MontserratBold',
-    fontSize: 15,
-  },
 });

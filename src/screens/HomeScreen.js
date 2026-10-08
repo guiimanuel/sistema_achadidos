@@ -284,7 +284,7 @@ function HomeScreen({ navigation }) {
     : '?';
 
   // Ajustado para usar apenas o padding exato do topo do dispositivo
-  const topPadding = insets.top;
+  const topPadding = insets.top + 6;
 
   useEffect(() => {
     return observarAutenticacao((user) => {
@@ -849,7 +849,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.green_primary,
     gap: 14,
     paddingHorizontal: 18,
-    paddingBottom: 18,
+    paddingBottom: 24,
     borderBottomLeftRadius: 18,
     borderBottomRightRadius: 18,
     zIndex: 5,

@@ -1,7 +1,7 @@
+import { AppAlert as Alert } from '../services/alerts.js';
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -38,7 +38,7 @@ function EditarItem({ navigation, route }) {
   const [excluindo, setExcluindo] = useState(false);
   const [marcandoAchado, setMarcandoAchado] = useState(false);
 
-  const topPadding = insets.top + 10;
+  const topPadding = insets.top + 16;
 
   useEffect(() => {
     if (route?.params?.imagemRecebida) {
@@ -147,12 +147,12 @@ function EditarItem({ navigation, route }) {
           disabled={desabilitado}
           hitSlop={10}
         >
-          <Ionicons name="arrow-back" size={24} color={colors.white} />
+          <Ionicons name="arrow-back" size={28} color={colors.white} />
         </Pressable>
 
         <Text style={styles.headerTitle}>Editar Publicação</Text>
 
-        <View style={{ width: 40 }} />
+        <View style={{ width: 48 }} />
       </View>
 
       <ScrollView
@@ -322,15 +322,17 @@ const styles = StyleSheet.create({
   },
 
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
 
   headerTitle: {
+    flex: 1,
+    textAlign: 'center',
     color: colors.white,
     fontSize: 20,
     fontFamily: "MontserratBold",
