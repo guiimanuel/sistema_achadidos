@@ -1,10 +1,15 @@
+import { AppAlert as Alert } from '../services/alerts.js';
 import * as React from 'react';
 import { Text, View, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors.js';
 import { sair, usuarioAtual } from '../services/auth.js';
 
 function PerfilScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
+  const usuario = usuarioAtual();
+
   const logoutUser = () => {
     sair()
       .then(() => {
@@ -14,7 +19,7 @@ function PerfilScreen({ navigation }) {
         });
       })
       .catch((error) => {
-        alert('Erro ao sair');
+        Alert.alert('Aviso', 'Erro ao sair');
         console.log(error);
       });
   };
@@ -22,23 +27,24 @@ function PerfilScreen({ navigation }) {
   return (
     <View style={styles.mainContainer}>
       {/* HEADER SUPERIOR VERDE */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         {/* Botão para voltar à tela anterior facilmente */}
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+        <TouchableOpacity style={styles.backButton} accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={28} color={colors.white} />
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>Meu Perfil</Text>
 
         {/* View vazia apenas para centralizar o título perfeitamente com o botão de voltar */}
-        <View style={{ width: 24 }} />
+        <View style={{ width: 48 }} />
       </View>
 
       {/* CONTEÚDO CENTRAL */}
       <View style={styles.container}>
         <Image style={styles.image} source={require('../assets/images/fotoperfil.png')} />
 
-        <Text style={styles.emailText}>{usuarioAtual()?.email || 'Usuário não logado'}</Text>
+        <Text style={styles.nameText}>{usuario?.displayName || 'Nome não informado'}</Text>
+        <Text style={styles.emailText}>{usuario?.email || 'Usuário não logado'}</Text>
 
         {/* BOTÃO ALTERAR SENHA */}
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('AlterarSenha')}>
@@ -67,28 +73,46 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: colors.green_primary, // Verde padrão do seu App Bar
-    paddingTop: 50,
-    paddingHorizontal: 20,
-    paddingBottom: 25,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    elevation: 4,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
   backButton: {
-    paddingLeft: 5,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
+    flex: 1,
     color: colors.white,
-    fontSize: 24,
-    fontWeight: 'bold',
+    fontSize: 20,
+    fontFamily: 'MontserratBold',
+    includeFontPadding: false,
     textAlign: 'center',
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     padding: 35,
+  },
+  nameText: {
+    fontSize: 24,
+    textAlign: 'center',
+    color: colors.green_primary,
+    marginBottom: 8,
+    fontWeight: 'bold',
   },
   emailText: {
     fontSize: 20,

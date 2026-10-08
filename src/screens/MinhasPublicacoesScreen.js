@@ -1,3 +1,4 @@
+import { AppAlert as Alert } from '../services/alerts.js';
 import React, {
   useCallback,
   useState,
@@ -5,11 +6,9 @@ import React, {
 
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   Pressable,
-  SafeAreaView,
   StyleSheet,
   Text,
   View,
@@ -23,6 +22,7 @@ import {
 } from 'firebase/firestore';
 
 import { useFocusEffect } from '@react-navigation/native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -209,6 +209,9 @@ function normalizePublicacao(
 function MinhasPublicacoesScreen({
   navigation,
 }) {
+  const insets = useSafeAreaInsets();
+  const topPadding = insets.top + 16;
+
   const [currentUser, setCurrentUser] =
     useState(null);
 
@@ -542,6 +545,7 @@ function MinhasPublicacoesScreen({
   if (loading) {
     return (
       <SafeAreaView
+      edges={['left', 'right', 'bottom']}
         style={styles.container}
       >
         <View
@@ -566,9 +570,10 @@ function MinhasPublicacoesScreen({
 
   return (
     <SafeAreaView
+      edges={['left', 'right', 'bottom']}
       style={styles.container}
     >
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: topPadding }]}>
         <Pressable
           style={styles.backButton}
           onPress={() =>
@@ -577,7 +582,7 @@ function MinhasPublicacoesScreen({
         >
           <Ionicons
             name="arrow-back"
-            size={25}
+            size={28}
             color={colors.white}
           />
         </Pressable>
@@ -673,17 +678,26 @@ const styles = StyleSheet.create({
   header: {
     backgroundColor:
       colors.green_primary,
-    minHeight: 70,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent:
       'space-between',
     paddingHorizontal: 16,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 18,
+    borderBottomRightRadius: 18,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
   },
 
   backButton: {
-    width: 45,
-    height: 45,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent:
       'center',
@@ -695,12 +709,12 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 20,
     fontFamily:
-      'MontserratExtraBold',
+      'MontserratBold',
     includeFontPadding: false,
   },
 
   headerSpace: {
-    width: 45,
+    width: 48,
   },
 
   listContent: {

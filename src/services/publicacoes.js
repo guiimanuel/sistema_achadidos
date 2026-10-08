@@ -59,7 +59,13 @@ function buildItemPayload({ titulo, descricao, filtro, imageUrl }, user) {
 
 export async function criarPublicacao({ titulo, descricao, filtro, imagem }) {
   const user = requireCurrentUser();
+  if (!String(descricao || "").trim()) {
+    throw new Error("Informe uma descrição para a publicação.");
+  }
   const imageUrl = normalizeImageValue(imagem);
+  if (!imageUrl) {
+    throw new Error("Adicione uma foto do item antes de publicar.");
+  }
 
   return addDoc(collection(db, PUBLICACOES_COLLECTION), {
     ...buildItemPayload({ titulo, descricao, filtro, imageUrl }, user),

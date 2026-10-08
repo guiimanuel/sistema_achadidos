@@ -19,6 +19,7 @@ import {
   Montserrat_800ExtraBold,
 } from '@expo-google-fonts/montserrat';
 
+import AppAlertHost from './src/components/AppAlertHost';
 import LoginScreen from './src/screens/LoginScreen';
 import CadastroScreen from './src/screens/CadastroScreen';
 import AlterarSenhaScreen from './src/screens/AlterarSenhaScreen';
@@ -54,7 +55,7 @@ const CustomHeader = ({ navigation, showBackButton = false, title = 'ACHADOS E P
         borderBottomLeftRadius: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: 60 + insets.top,
+        minHeight: 80 + insets.top,
         shadowColor: colors.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.15,
@@ -68,16 +69,24 @@ const CustomHeader = ({ navigation, showBackButton = false, title = 'ACHADOS E P
           style={{
             position: 'absolute',
             left: 16,
-            top: insets.top + 12,
+            top: insets.top + 16,
+            width: 48,
+            height: 48,
+            borderRadius: 24,
+            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+            alignItems: 'center',
+            justifyContent: 'center',
             zIndex: 10,
           }}
           onPress={() => navigation.navigate('Home')}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar para Home"
         >
-          <Ionicons name="arrow-back" size={26} color="#fff" />
+          <Ionicons name="arrow-back" size={28} color={colors.white} />
         </TouchableOpacity>
       )}
 
-      <Text style={[theme.typography.headerTitle, { marginBottom: 10 }]}>
+      <Text style={[theme.typography.headerTitle, { textAlign: 'center', paddingHorizontal: showBackButton ? 72 : 16 }]}>
         {title}
       </Text>
     </View>
@@ -229,6 +238,7 @@ function App() {
             />
           </Stack.Navigator>
         </NavigationContainer>
+        <AppAlertHost />
       </KeyboardProvider>
     </SafeAreaProvider>
   );

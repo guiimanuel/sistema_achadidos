@@ -1,3 +1,4 @@
+import { AppAlert as Alert } from '../services/alerts.js';
 import * as React from "react";
 import {
     View,
@@ -15,17 +16,17 @@ function AlterarSenhaScreen({ navigation }) {
     const [email, setEmail] = useState("");
     const recuperarSenha = () => {
         if (!email) {
-            alert("Digite seu e-mail.");
+            Alert.alert('Aviso', "Digite seu e-mail.");
             return;
         }
 
         enviarRedefinicaoDeSenha(email)
             .then(() => {
-                alert("E-mail de recuperação enviado com sucesso!");
+                Alert.alert('Aviso', "E-mail de recuperação enviado com sucesso!");
                 navigation.goBack();
             })
             .catch((error) => {
-                alert("Erro ao enviar e-mail de recuperação.");
+                Alert.alert('Aviso', "Erro ao enviar e-mail de recuperação.");
                 console.log(error);
             });
     };
