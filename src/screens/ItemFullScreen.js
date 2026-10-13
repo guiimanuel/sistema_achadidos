@@ -1,5 +1,5 @@
 import { AppAlert as Alert } from '../services/alerts.js';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors.js';
 import { theme } from '../styles/theme.js';
+import { auth, usuarioAtual } from '../services/auth.js';
 
 const HERO_BACKGROUND = '#e5ebe1';
 
@@ -25,7 +26,6 @@ const notebookImage = require('../assets/images/caderno.png');
 const caseImage = require('../assets/images/estojo.png');
 const INSTITUTION_EMAIL = 'daee@jaboatao.ifpe.edu.br';
 
-// CREDENCIAIS DO EMAILJS
 const EMAILJS_SERVICE_ID = 'service_wuhafya';
 const EMAILJS_TEMPLATE_ID = 'template_vwyjd8c';
 const EMAILJS_PUBLIC_KEY = 'sf7es5fokN-JUdLiR';
@@ -129,7 +129,6 @@ function ItemFullScreen({ navigation, route }) {
   const dateText = formatDateFromItem(item);
   const ownerEmail = firstValue(item, ['ownerEmail', 'userEmail', 'email', 'usuarioEmail']);
 
-  // Estados do Modal
   const [modalVisible, setModalVisible] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [targetEmail, setTargetEmail] = useState('');
@@ -138,11 +137,29 @@ function ItemFullScreen({ navigation, route }) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
 
-  function openEmailModal(recipientEmail, isInstitution = false) {
+  // Recarrega o perfil do usuário para garantir que o displayName atualizado seja carregado
+  async function obterNomeAtualizado() {
+    const currentUser = usuarioAtual() || auth?.currentUser;
+    if (currentUser) {
+      try {
+        await currentUser.reload(); // Atualiza os dados do Firebase
+      } catch (e) {
+        console.log("Erro ao recarregar perfil:", e);
+      }
+      return currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : '');
+    }
+    return '';
+  }
+
+  async function openEmailModal(recipientEmail, isInstitution = false) {
     if (!recipientEmail) {
       Alert.alert('Aviso', 'E-mail de destino não encontrado.');
       return;
     }
+
+    const nomeCarregado = await obterNomeAtualizado();
+
+    setSenderName(nomeCarregado);
     setIsSuccess(false);
     setTargetEmail(recipientEmail);
     setSubject(`Sobre o item "${title}" - Achados e Perdidos`);
@@ -155,12 +172,20 @@ function ItemFullScreen({ navigation, route }) {
   }
 
   async function handleSendEmail() {
+    if (!senderName.trim()) {
+      Alert.alert('Atenção', 'Por favor, informe o seu nome.');
+      return;
+    }
+
     if (!message.trim()) {
       Alert.alert('Atenção', 'Por favor, escreva uma mensagem antes de enviar.');
       return;
     }
 
     setIsSending(true);
+
+    const currentUser = usuarioAtual() || auth?.currentUser;
+    const userEmail = currentUser?.email || '';
 
     try {
       const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
@@ -175,7 +200,8 @@ function ItemFullScreen({ navigation, route }) {
           user_id: EMAILJS_PUBLIC_KEY,
           template_params: {
             to_email: targetEmail,
-            from_name: senderName.trim() || 'Usuário do App',
+            from_name: senderName.trim(),
+            from_email: userEmail,
             item_title: title,
             subject: subject,
             message: message,
@@ -186,7 +212,6 @@ function ItemFullScreen({ navigation, route }) {
       if (response.ok) {
         setIsSuccess(true);
         setMessage('');
-        setSenderName('');
       } else {
         const errorText = await response.text();
         console.error('Resposta de erro do EmailJS:', errorText);
@@ -229,159 +254,159 @@ function ItemFullScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-    {header}
-    <ScrollView
-      contentInsetAdjustmentBehavior="never"
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
-      style={[styles.container, styles.headerUnderlap]}>
-      <View style={styles.hero}>
-        <Image source={getImageSource(item)} style={styles.heroImage} resizeMode="contain" />
-      </View>
-
-      <View style={styles.details}>
-        <Text selectable style={styles.title}>
-          {title}
-        </Text>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Descrição</Text>
-          <Text selectable style={styles.description}>
-            {description}
-          </Text>
+      {header}
+      <ScrollView
+        contentInsetAdjustmentBehavior="never"
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 32 }]}
+        style={[styles.container, styles.headerUnderlap]}>
+        <View style={styles.hero}>
+          <Image source={getImageSource(item)} style={styles.heroImage} resizeMode="contain" />
         </View>
 
-        <View style={styles.card}>
-          <InfoRow icon="pricetag-outline" label="Categoria" value={category} />
-          <InfoRow icon="calendar-outline" label="Publicado em" value={dateText} />
-          <InfoRow icon="location-outline" label="Local" value={location} />
-          <InfoRow icon="mail-outline" label="Contato" value={ownerEmail} />
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.helpText}>
-            Esse item é seu? Entre em contato com quem publicou ou fale com a DAEE.
+        <View style={styles.details}>
+          <Text selectable style={styles.title}>
+            {title}
           </Text>
 
-          <Pressable
-            accessibilityRole="button"
-            style={styles.contactButton}
-            onPress={() => openEmailModal(ownerEmail, false)}
-          >
-            <Ionicons name="mail-outline" size={21} color="#ffffff" />
-            <Text style={styles.contactButtonText}>Contatar publicador</Text>
-          </Pressable>
-
-          <Pressable
-            accessibilityRole="button"
-            style={[styles.contactButton, styles.institutionButton]}
-            onPress={() => openEmailModal(INSTITUTION_EMAIL, true)}
-          >
-            <Ionicons name="business-outline" size={21} color={colors.green_primary} />
-            <Text style={[styles.contactButtonText, styles.institutionButtonText]}>
-              Contatar DAEE
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Descrição</Text>
+            <Text selectable style={styles.description}>
+              {description}
             </Text>
-          </Pressable>
-        </View>
-      </View>
+          </View>
 
-    </ScrollView>
-  <Modal
-    animationType="fade"
-    transparent={true}
-    visible={modalVisible}
-    onRequestClose={() => setModalVisible(false)}
-  >
-    <View style={styles.modalOverlay}>
-      <View style={styles.modalContainer}>
-        {isSuccess ? (
-          <View style={styles.successWrapper}>
-            <Ionicons name="checkmark-circle" size={72} color={colors.green_primary} />
-            <Text style={styles.successTitle}>E-mail enviado com sucesso!</Text>
-            <Text style={styles.successDescription}>
-              Sua mensagem foi enviada para{' '}
-              <Text style={styles.modalBold}>{targetEmail}</Text>.
+          <View style={styles.card}>
+            <InfoRow icon="pricetag-outline" label="Categoria" value={category} />
+            <InfoRow icon="calendar-outline" label="Publicado em" value={dateText} />
+            <InfoRow icon="location-outline" label="Local" value={location} />
+            <InfoRow icon="mail-outline" label="Contato" value={ownerEmail} />
+          </View>
+
+          <View style={styles.card}>
+            <Text style={styles.helpText}>
+              Esse item é seu? Entre em contato com quem publicou ou fale com a DAEE.
             </Text>
 
             <Pressable
-              style={styles.successBtn}
-              onPress={() => {
-                setModalVisible(false);
-                setIsSuccess(false);
-              }}
+              accessibilityRole="button"
+              style={styles.contactButton}
+              onPress={() => openEmailModal(ownerEmail, false)}
             >
-              <Text style={styles.successBtnText}>Concluir</Text>
+              <Ionicons name="mail-outline" size={21} color="#ffffff" />
+              <Text style={styles.contactButtonText}>Contatar publicador</Text>
+            </Pressable>
+
+            <Pressable
+              accessibilityRole="button"
+              style={[styles.contactButton, styles.institutionButton]}
+              onPress={() => openEmailModal(INSTITUTION_EMAIL, true)}
+            >
+              <Ionicons name="business-outline" size={21} color={colors.green_primary} />
+              <Text style={[styles.contactButtonText, styles.institutionButtonText]}>
+                Contatar DAEE
+              </Text>
             </Pressable>
           </View>
-        ) : (
-          <ScrollView showsVerticalScrollIndicator={false}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Enviar Mensagem</Text>
-              <Pressable onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color={colors.text_primary} />
-              </Pressable>
-            </View>
+        </View>
+      </ScrollView>
 
-            <Text style={styles.modalSub}>
-              Destinatário: <Text style={styles.modalBold}>{targetEmail}</Text>
-            </Text>
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            {isSuccess ? (
+              <View style={styles.successWrapper}>
+                <Ionicons name="checkmark-circle" size={72} color={colors.green_primary} />
+                <Text style={styles.successTitle}>E-mail enviado com sucesso!</Text>
+                <Text style={styles.successDescription}>
+                  Sua mensagem foi enviada para{' '}
+                  <Text style={styles.modalBold}>{targetEmail}</Text>.
+                </Text>
 
-            <Text style={styles.inputLabel}>Seu Nome / Matrícula</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: Maria Clara"
-              value={senderName}
-              onChangeText={setSenderName}
-              placeholderTextColor={colors.gray_placeholder}
-            />
+                <Pressable
+                  style={styles.successBtn}
+                  onPress={() => {
+                    setModalVisible(false);
+                    setIsSuccess(false);
+                  }}
+                >
+                  <Text style={styles.successBtnText}>Concluir</Text>
+                </Pressable>
+              </View>
+            ) : (
+              <ScrollView showsVerticalScrollIndicator={false}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Enviar Mensagem</Text>
+                  <Pressable onPress={() => setModalVisible(false)}>
+                    <Ionicons name="close" size={24} color={colors.text_primary} />
+                  </Pressable>
+                </View>
 
-            <Text style={styles.inputLabel}>Assunto</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Assunto"
-              value={subject}
-              onChangeText={setSubject}
-              placeholderTextColor={colors.gray_placeholder}
-            />
+                <Text style={styles.modalSub}>
+                  Destinatário: <Text style={styles.modalBold}>{targetEmail}</Text>
+                </Text>
 
-            <Text style={styles.inputLabel}>Mensagem</Text>
-            <TextInput
-              style={[styles.input, styles.textArea]}
-              placeholder="Escreva sua mensagem aqui..."
-              value={message}
-              onChangeText={setMessage}
-              multiline
-              numberOfLines={5}
-              textAlignVertical="top"
-              placeholderTextColor={colors.gray_placeholder}
-            />
+                <Text style={styles.inputLabel}>Seu Nome / Matrícula</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Ex: Maria Clara"
+                  value={senderName}
+                  onChangeText={setSenderName}
+                  placeholderTextColor={colors.gray_placeholder}
+                />
 
-            <View style={styles.modalActions}>
-              <Pressable
-                style={[styles.actionBtn, styles.cancelBtn]}
-                onPress={() => setModalVisible(false)}
-                disabled={isSending}
-              >
-                <Text style={styles.cancelBtnText}>Cancelar</Text>
-              </Pressable>
+                <Text style={styles.inputLabel}>Assunto</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Assunto"
+                  value={subject}
+                  onChangeText={setSubject}
+                  placeholderTextColor={colors.gray_placeholder}
+                />
 
-              <Pressable
-                style={[styles.actionBtn, styles.sendBtn]}
-                onPress={handleSendEmail}
-                disabled={isSending}
-              >
-                {isSending ? (
-                  <ActivityIndicator color={colors.white} />
-                ) : (
-                  <Text style={styles.sendBtnText}>Enviar</Text>
-                )}
-              </Pressable>
-            </View>
-          </ScrollView>
-        )}
-      </View>
-    </View>
-  </Modal>
+                <Text style={styles.inputLabel}>Mensagem</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Escreva sua mensagem aqui..."
+                  value={message}
+                  onChangeText={setMessage}
+                  multiline
+                  numberOfLines={5}
+                  textAlignVertical="top"
+                  placeholderTextColor={colors.gray_placeholder}
+                />
+
+                <View style={styles.modalActions}>
+                  <Pressable
+                    style={[styles.actionBtn, styles.cancelBtn]}
+                    onPress={() => setModalVisible(false)}
+                    disabled={isSending}
+                  >
+                    <Text style={styles.cancelBtnText}>Cancelar</Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.actionBtn, styles.sendBtn]}
+                    onPress={handleSendEmail}
+                    disabled={isSending}
+                  >
+                    {isSending ? (
+                      <ActivityIndicator color={colors.white} />
+                    ) : (
+                      <Text style={styles.sendBtnText}>Enviar</Text>
+                    )}
+                  </Pressable>
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
