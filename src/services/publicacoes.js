@@ -1,7 +1,10 @@
+import { getDateMillis as getPersonalDateMillis } from '../utils/datas.js';
 import {
-  addDoc,
+  setDoc,
   collection,
   deleteDoc,
+  getDocs,
+  getDoc,
   doc,
   onSnapshot,
   query,
@@ -9,12 +12,18 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
-import { auth, db } from "../config/firebase.js";
+import { auth, db } from "../lib/firebase.js";
+import { notificarNovaPublicacao } from './notifications.js';
+import { MAX_IMAGE_DATA_URL_LENGTH } from '../constants/imagens.js';
+import { CATEGORIAS, normalizarCategoria } from '../constants/categorias.js';
+import { limiteImagemPublicacao } from '../utils/tamanhoPublicacao.js';
+import { prepararImagem } from './imagens.js';
+import { podePublicar } from '../utils/permissoes.js';
+import { salvarImagemCloudinary, desfazerUploadCloudinary } from './storageCloudinary.js';
 
 export const PUBLICACOES_COLLECTION = "itens";
 export const COLECOES_PUBLICACOES = ["itens", "item"];
 
-const MAX_IMAGE_DATA_URL_LENGTH = 800000;
 const SUPPORTED_IMAGE_PATTERN = /^(https?:|data:image\/)/i;
 
 function requireCurrentUser() {
@@ -23,6 +32,8 @@ function requireCurrentUser() {
   if (!user) {
     throw new Error("Você precisa estar logado para publicar itens.");
   }
+
+  if (!podePublicar(user)) throw new Error('Sua conta não tem acesso às funcionalidades de publicação. Confirme seu e-mail; contas de discentes não podem publicar.');
 
   return user;
 }
@@ -46,11 +57,13 @@ function normalizeImageValue(value) {
 }
 
 function buildItemPayload({ titulo, descricao, filtro, imageUrl }, user) {
+  const categoria = normalizarCategoria(filtro);
+  if (!CATEGORIAS.includes(String(filtro || '').trim())) throw new Error('Escolha uma das categorias disponíveis.');
   return {
     titulo: String(titulo || "").trim(),
     descricao: String(descricao || "").trim(),
-    filtro: String(filtro || "").trim(),
-    categoria: String(filtro || "").trim(),
+    filtro: categoria,
+    categoria,
     imageUrl: imageUrl || "",
     userId: user.uid,
     userEmail: user.email || "",
@@ -67,13 +80,33 @@ export async function criarPublicacao({ titulo, descricao, filtro, imagem }) {
     throw new Error("Adicione uma foto do item antes de publicar.");
   }
 
-  return addDoc(collection(db, PUBLICACOES_COLLECTION), {
+  const itemRef = doc(collection(db, PUBLICACOES_COLLECTION));
+  const payload = {
     ...buildItemPayload({ titulo, descricao, filtro, imageUrl }, user),
     status: "disponivel",
     expiraEm: null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
-  });
+  };
+  const imageLimit = limiteImagemPublicacao(payload, itemRef.path);
+  if (imageUrl.startsWith('data:image/') && imageUrl.length > imageLimit) {
+    payload.imageUrl = await prepararImagem({ uri: imageUrl }, imageLimit);
+  }
+  const upload = await salvarImagemCloudinary(payload.imageUrl);
+  payload.imageUrl = upload.url;
+  try { await setDoc(itemRef, payload); }
+  catch (error) {
+    await desfazerUploadCloudinary(upload.deleteToken).catch(() => {});
+    throw error;
+  }
+  void notificarNovaPublicacao(itemRef.id, user);
+  return itemRef;
+}
+
+export async function buscarPublicacao(itemId, collectionName = PUBLICACOES_COLLECTION) {
+  if (!COLECOES_PUBLICACOES.includes(collectionName)) throw new Error('Coleção inválida.');
+  const snapshot = await getDoc(doc(db, collectionName, itemId));
+  return snapshot.exists() ? normalizePublicacao(snapshot, collectionName) : null;
 }
 
 export async function atualizarPublicacao(item, { titulo, descricao, filtro, imagem }) {
@@ -91,10 +124,22 @@ export async function atualizarPublicacao(item, { titulo, descricao, filtro, ima
 
   const imageUrl = normalizeImageValue(imagem);
 
-  await updateDoc(doc(db, sourceCollection, docId), {
+  const itemRef = doc(db, sourceCollection, docId);
+  const payload = {
     ...buildItemPayload({ titulo, descricao, filtro, imageUrl }, user),
     updatedAt: serverTimestamp(),
-  });
+  };
+  const imageLimit = limiteImagemPublicacao({ ...payload, createdAt: serverTimestamp(), status: item?.status || 'disponivel', expiraEm: item?.expiraEm ?? null }, itemRef.path);
+  if (imageUrl.startsWith('data:image/') && imageUrl.length > imageLimit) {
+    payload.imageUrl = await prepararImagem({ uri: imageUrl }, imageLimit);
+  }
+  const upload = imageUrl !== item.imageUrl ? await salvarImagemCloudinary(payload.imageUrl) : null;
+  if (upload) payload.imageUrl = upload.url;
+  try { await updateDoc(itemRef, payload); }
+  catch (error) {
+    if (upload) await desfazerUploadCloudinary(upload.deleteToken).catch(() => {});
+    throw error;
+  }
 }
 
 // FUNÇÃO ATUALIZADA: MARCAR COMO ACHADO
@@ -176,7 +221,7 @@ export function normalizePublicacao(docSnapshot, sourceCollection = PUBLICACOES_
     sourceCollection,
     titulo: data.titulo || data.title || data.nome || "Sem título",
     descricao: data.descricao || data.description || data.texto || "",
-    filtro: data.filtro || data.categoria || data.category || "",
+    filtro: normalizarCategoria(data.filtro || data.categoria || data.category),
     imageUrl: data.imageUrl || data.imagem || data.fotoUrl || "",
     userId: data.userId || data.uid || "",
     userEmail: data.userEmail || data.email || "",
@@ -205,4 +250,133 @@ export function getDateMillis(value) {
   }
 
   return 0;
+}
+
+function normalizeMinhaPublicacao(
+  docSnapshot
+) {
+  const data = docSnapshot.data();
+
+  return {
+    id: docSnapshot.id,
+
+    titulo:
+      data.titulo ||
+      data.title ||
+      data.nome ||
+      'Item sem título',
+
+    descricao:
+      data.descricao ||
+      data.description ||
+      data.texto ||
+      data.detalhes ||
+      '',
+
+    categoria:
+      data.categoria ||
+      data.categoriaNome ||
+      data.category ||
+      data.tipo ||
+      data.filtro ||
+      '',
+
+    imageUrl:
+      data.imageUrl ||
+      data.imagem ||
+      data.fotoUrl ||
+      data.photoUrl ||
+      data.image ||
+      data.foto ||
+      '',
+
+    userId:
+      data.userId ||
+      data.uid ||
+      data.id_usuario ||
+      data.usuarioId ||
+      '',
+
+    userEmail:
+      data.userEmail ||
+      data.email ||
+      data.usuarioEmail ||
+      '',
+
+    createdAt:
+      data.createdAt ||
+      data.dataCriacao ||
+      data.data ||
+      null,
+
+    status: data.status || 'disponivel',
+
+    expiraEm: data.expiraEm || null,
+  };
+}
+
+export async function listarMinhasPublicacoes(user) {
+  if (!podePublicar(user)) return [];
+  const snapshot =
+    await getDocs(
+      collection(db, 'itens')
+    );
+
+  const minhasPublicacoes = [];
+  const agora = Date.now();
+
+  snapshot.forEach(
+    (docSnapshot) => {
+      const data =
+        docSnapshot.data();
+
+      const userId = String(
+        data.userId ||
+        data.uid ||
+        data.ownerId ||
+        ''
+      );
+
+      const userEmail = String(
+        data.userEmail ||
+        data.email ||
+        data.ownerEmail ||
+        ''
+      );
+
+      const pertenceAoUsuario =
+        userId === user.uid ||
+        (
+          user.email &&
+          userEmail.toLowerCase() ===
+          user.email.toLowerCase()
+        );
+
+      if (pertenceAoUsuario) {
+        const itemNormalizado = normalizeMinhaPublicacao(docSnapshot);
+
+        // Oculta itens marcados como "achado" que já ultrapassaram o tempo limite
+        const jaExpirou =
+          itemNormalizado.status === 'achado' &&
+          itemNormalizado.expiraEm &&
+          agora >= itemNormalizado.expiraEm;
+
+        if (!jaExpirou) {
+          minhasPublicacoes.push(itemNormalizado);
+        }
+      }
+    }
+  );
+
+  minhasPublicacoes.sort(
+    (a, b) =>
+      getPersonalDateMillis(
+        b.createdAt
+      ) -
+      getPersonalDateMillis(
+        a.createdAt
+      )
+  );
+
+  return minhasPublicacoes;
 }

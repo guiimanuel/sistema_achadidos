@@ -11,6 +11,14 @@ web-build/
 expo-env.d.ts
 
 # Native
+android/.gradle/
+android/.kotlin/
+android/.cxx/
+android/build/
+android/app/build/
+android/app/.cxx/
+android/local.properties
+ios/build/
 *.orig.*
 *.jks
 *.p8
@@ -32,6 +40,15 @@ yarn-error.*
 
 # local env files
 .env*.local
+.env
+supabase/.temp/
+supabase/.branches/
+supabase/secrets.env
+google-services.json
+**/google-services.json
+!android/app/google-services.json
+*service-account*.json
+supabase/achadidos-15d82-*.json
 
 # typescript
 *.tsbuildinfo

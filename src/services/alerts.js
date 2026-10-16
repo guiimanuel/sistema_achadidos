@@ -1,4 +1,5 @@
 let queue = [];
+let nextToastId = 0;
 const listeners = new Set();
 
 function notify() {
@@ -21,13 +22,31 @@ export const AppAlert = {
       message,
       buttons: buttons?.length ? buttons : [{ text: 'OK' }],
       options,
+      presentation: 'modal',
+    }];
+    notify();
+  },
+  toast(title, message) {
+    queue = [...queue, {
+      id: ++nextToastId,
+      title,
+      message,
+      buttons: [],
+      options: { variant: 'success' },
+      presentation: 'toast',
     }];
     notify();
   },
 };
 
+export function dismissToast(alert) {
+  if (!alert || alert.presentation !== 'toast' || getCurrentAlert() !== alert) return;
+  queue = queue.slice(1);
+  notify();
+}
+
 export function pressAlertButton(alert, button) {
-  if (!alert || getCurrentAlert() !== alert) return;
+  if (!alert || getCurrentAlert() !== alert || !alert.buttons.includes(button)) return;
   queue = queue.slice(1);
   notify();
   button.onPress?.();
@@ -35,6 +54,10 @@ export function pressAlertButton(alert, button) {
 
 export function dismissAlert(alert) {
   if (!alert || getCurrentAlert() !== alert) return;
+  if (alert.presentation === 'toast') {
+    dismissToast(alert);
+    return;
+  }
   const cancelButton = alert.buttons.find(button => button.style === 'cancel');
   if (cancelButton) {
     pressAlertButton(alert, cancelButton);

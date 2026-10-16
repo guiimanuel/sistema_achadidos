@@ -1,25 +1,28 @@
+import { useAuth } from '../hooks/useAuth.js';
 import { AppAlert as Alert } from '../services/alerts.js';
 import * as React from 'react';
-import { Text, View, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { AntDesign, Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors.js';
-import { sair, usuarioAtual } from '../services/auth.js';
+import { sair } from '../services/auth.js';
+import UserAvatar from '../components/UserAvatar.js';
 
 function PerfilScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const usuario = usuarioAtual();
+  const { usuario } = useAuth();
 
   const logoutUser = () => {
     sair()
       .then(() => {
+        Alert.toast('Logout realizado', 'Você saiu da conta com sucesso.');
         navigation.reset({
           index: 0,
           routes: [{ name: 'Login' }],
         });
       })
       .catch((error) => {
-        Alert.alert('Aviso', 'Erro ao sair');
+        Alert.alert('Aviso', 'Erro ao sair', undefined, { variant: 'error' });
         console.log(error);
       });
   };
@@ -41,7 +44,7 @@ function PerfilScreen({ navigation }) {
 
       {/* CONTEÚDO CENTRAL */}
       <View style={styles.container}>
-        <Image style={styles.image} source={require('../assets/images/fotoperfil.png')} />
+        <UserAvatar user={usuario} size={130} style={styles.avatar} />
 
         <Text style={styles.nameText}>{usuario?.displayName || 'Nome não informado'}</Text>
         <Text style={styles.emailText}>{usuario?.email || 'Usuário não logado'}</Text>
@@ -96,6 +99,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 8,
     color: colors.white,
     fontSize: 20,
     fontFamily: 'MontserratBold',
@@ -121,14 +126,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
     fontWeight: '500',
   },
-  image: {
-    width: 130,
-    height: 130,
-    borderRadius: 65,
+  avatar: {
     alignSelf: 'center',
     marginBottom: 20,
-    borderWidth: 3,
-    borderColor: colors.green_primary, // Borda verde combinando com a logo
   },
   button: {
     backgroundColor: colors.white,

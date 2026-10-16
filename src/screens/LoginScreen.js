@@ -2,27 +2,33 @@ import { AppAlert as Alert } from '../services/alerts.js';
 import * as React from 'react';
 import { Text, View, Image, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import { useState } from 'react';
-import { useExpoFonts } from '../components/expoFonts.js';
+import { useExpoFonts } from '../hooks/useExpoFonts.js';
 import { colors } from '../styles/colors.js';
 import { entrar } from '../services/auth.js';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
+import PasswordInput from '../components/PasswordInput.js';
+import GoogleAuthButton from '../components/GoogleAuthButton.js';
 
 function LoginScreen({ navigation }) {
   const { fontsLoaded } = useExpoFonts();
 
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
+  const [entrando, setEntrando] = useState(false);
+  const [googleBusy, setGoogleBusy] = useState(false);
 
   if (!fontsLoaded) {
     return null;
   }
 
   const signInUser = async () => {
+    if (entrando || googleBusy) return;
     if (!email.trim() || !senha.trim()) {
       Alert.alert('Campos vazios', 'Por favor, preencha os campos de e-mail e senha com as informações fornecidas aos servidores.');
       return;
     }
 
+    setEntrando(true);
     try {
       const userCredential = await entrar(email, senha);
       const user = userCredential.user;
@@ -34,8 +40,8 @@ function LoginScreen({ navigation }) {
 
     } catch (error) {
       console.log('Erro de autenticação:', error);
-      Alert.alert('Erro ao Logar', 'E-mail ou senha inválido. ATENÇÂO: Login permitido apenas para Servidores.');
-    }
+      Alert.alert(error.code === 'auth/email-not-verified' ? 'Verifique seu e-mail' : 'Erro ao entrar', error.code === 'auth/email-not-verified' ? error.message : 'E-mail ou senha inválido.', undefined, { variant: error.code === 'auth/email-not-verified' ? 'success' : 'error' });
+    } finally { setEntrando(false); }
   };
 
   return (
@@ -46,10 +52,10 @@ function LoginScreen({ navigation }) {
       keyboardShouldPersistTaps="handled"
     >
       <Image style={styles.image} source={require('../assets/images/caixa.png')} />
-      <Text style={styles.title}>BEM VINDO!</Text>
+      <Text accessibilityRole="header" style={styles.title}>Bem-vindo de volta!</Text>
 
       <Text style={styles.titlemini}>
-        Faça o seu login com <Text style={styles.titlemini2}>email e senha</Text>
+        Acesse sua conta para continuar.
       </Text>
 
       <View style={styles.form}>
@@ -71,9 +77,10 @@ function LoginScreen({ navigation }) {
           Senha
         </Text>
 
-        <TextInput
+        <PasswordInput
           placeholder="Digite sua senha..."
-          secureTextEntry
+          autoComplete="current-password"
+          accessibilityLabel="Senha"
           style={styles.input}
           value={senha}
           autoCapitalize="none"
@@ -82,9 +89,10 @@ function LoginScreen({ navigation }) {
           placeholderTextColor={colors.gray_placeholder}
         />
 
-        <TouchableOpacity style={styles.button} onPress={signInUser}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity style={styles.button} onPress={signInUser} disabled={entrando || googleBusy}>
+          <Text style={styles.buttonText}>{entrando ? 'Entrando...' : 'Entrar'}</Text>
         </TouchableOpacity>
+        <GoogleAuthButton navigation={navigation} disabled={entrando} onBusyChange={setGoogleBusy} />
 
       <TouchableOpacity onPress={() => navigation.navigate('Cadastro')}>
         <Text style={styles.link}>
@@ -118,22 +126,29 @@ const styles = StyleSheet.create({
   },
   form: {
     width: '100%',
-    maxWidth: 350,
+    maxWidth: 380,
     alignSelf: 'center',
   },
   title: {
-    fontSize: 30,
+    fontSize: 28,
+    lineHeight: 36,
+    letterSpacing: -0.5,
     textAlign: 'center',
-    fontWeight: 'bold',
-    color: colors.green_primary,
+    color: colors.green_dark,
     fontFamily: 'MontserratBold',
+    marginBottom: 8,
+    maxWidth: 380,
+    alignSelf: 'center',
   },
   titlemini: {
-    fontSize: 18,
-    marginBottom: 80,
+    fontSize: 15,
+    lineHeight: 23,
+    marginBottom: 32,
     textAlign: 'center',
-    color: colors.green_primary,
-    fontFamily: 'MontserratMedium',
+    color: colors.text_secondary,
+    fontFamily: 'MontserratRegular',
+    maxWidth: 340,
+    alignSelf: 'center',
   },
 
   titulop: {
@@ -142,26 +157,20 @@ const styles = StyleSheet.create({
     color: '#101010',
     fontFamily: 'MontserratMedium',
   },
-
-  titlemini2: {
-    fontSize: 17,
-    marginBottom: 100,
-    textAlign: 'center',
-    color: colors.green_primary,
-  },
   image: {
     width: 250,
     height: 184,
     alignSelf: 'center',
+    marginBottom: 16,
   },
   input: {
     backgroundColor: colors.white,
-    marginBottom: 15,
+    marginBottom: 12,
     borderRadius: 8,
     borderColor: colors.blue_border,
     borderWidth: 1,
     fontFamily: 'MontserratRegular',
-    fontSize: 16,
+    fontSize: 14,
     lineHeight: 22,
     width: '100%',
     height: 55,
@@ -173,7 +182,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: colors.green_primary,
     padding: 12,
-    marginBottom: 20,
+    marginBottom: 5,
     marginTop: 30,
     borderRadius: 8,
     width: '100%',
@@ -184,6 +193,7 @@ const styles = StyleSheet.create({
     color: colors.white,
     textAlign: 'center',
     fontFamily: 'MontserratBold',
+    fontSize: 15,
   },
   link: {
     textAlign: 'left',

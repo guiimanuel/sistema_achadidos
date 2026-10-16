@@ -1,3 +1,4 @@
+import { normalizeText } from '../utils/texto.js';
 import { AppAlert as Alert } from '../services/alerts.js';
 import React, { useState, useEffect } from 'react';
 import {
@@ -16,7 +17,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../styles/colors.js';
 import { theme } from '../styles/theme.js';
-import { auth, usuarioAtual } from '../services/auth.js';
+import { usuarioAtual, atualizarUsuarioAtual } from '../services/auth.js';
+import { enviarContato, resolverRemetenteContato } from '../services/contato.js';
+import { notificarContato } from '../services/notifications.js';
+import { useAuth } from '../hooks/useAuth.js';
 
 const HERO_BACKGROUND = '#e5ebe1';
 
@@ -25,18 +29,6 @@ const bottleImage = require('../assets/images/garrafa.png');
 const notebookImage = require('../assets/images/caderno.png');
 const caseImage = require('../assets/images/estojo.png');
 const INSTITUTION_EMAIL = 'daee@jaboatao.ifpe.edu.br';
-
-const EMAILJS_SERVICE_ID = 'service_wuhafya';
-const EMAILJS_TEMPLATE_ID = 'template_vwyjd8c';
-const EMAILJS_PUBLIC_KEY = 'sf7es5fokN-JUdLiR';
-
-function normalizeText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
-}
 
 function firstValue(item, keys, fallback = '') {
   for (const key of keys) {
@@ -115,6 +107,7 @@ function InfoRow({ icon, label, value }) {
 }
 
 function ItemFullScreen({ navigation, route }) {
+  const { usuario } = useAuth();
   const insets = useSafeAreaInsets();
   const item = route?.params?.item;
 
@@ -133,33 +126,39 @@ function ItemFullScreen({ navigation, route }) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [targetEmail, setTargetEmail] = useState('');
   const [senderName, setSenderName] = useState('');
+  const [accountContactName, setAccountContactName] = useState('');
+  const [senderEmail, setSenderEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const [contatoPublicador, setContatoPublicador] = useState(false);
 
   // Recarrega o perfil do usuário para garantir que o displayName atualizado seja carregado
   async function obterNomeAtualizado() {
-    const currentUser = usuarioAtual() || auth?.currentUser;
+    const currentUser = usuarioAtual();
     if (currentUser) {
       try {
-        await currentUser.reload(); // Atualiza os dados do Firebase
+        await atualizarUsuarioAtual(); // Atualiza os dados do Firebase
       } catch (e) {
         console.log("Erro ao recarregar perfil:", e);
       }
-      return currentUser.displayName || (currentUser.email ? currentUser.email.split('@')[0] : '');
+      return usuarioAtual()?.displayName?.trim() || '';
     }
     return '';
   }
 
   async function openEmailModal(recipientEmail, isInstitution = false) {
     if (!recipientEmail) {
-      Alert.alert('Aviso', 'E-mail de destino não encontrado.');
+      Alert.alert('Aviso', 'E-mail de destino não encontrado.', undefined, { variant: 'error' });
       return;
     }
 
     const nomeCarregado = await obterNomeAtualizado();
 
+    setAccountContactName(nomeCarregado);
     setSenderName(nomeCarregado);
+    setSenderEmail(usuarioAtual()?.email || '');
+    setContatoPublicador(!isInstitution);
     setIsSuccess(false);
     setTargetEmail(recipientEmail);
     setSubject(`Sobre o item "${title}" - Achados e Perdidos`);
@@ -172,8 +171,13 @@ function ItemFullScreen({ navigation, route }) {
   }
 
   async function handleSendEmail() {
-    if (!senderName.trim()) {
-      Alert.alert('Atenção', 'Por favor, informe o seu nome.');
+    if (isSending) return;
+    const currentUser = usuarioAtual();
+    let remetente;
+    try {
+      remetente = resolverRemetenteContato(currentUser, { nome: senderName, email: senderEmail });
+    } catch (error) {
+      Alert.alert('Dados de contato', error.message);
       return;
     }
 
@@ -184,42 +188,27 @@ function ItemFullScreen({ navigation, route }) {
 
     setIsSending(true);
 
-    const currentUser = usuarioAtual() || auth?.currentUser;
-    const userEmail = currentUser?.email || '';
-
     try {
-      const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'origin': 'localhost',
-        },
-        body: JSON.stringify({
-          service_id: EMAILJS_SERVICE_ID,
-          template_id: EMAILJS_TEMPLATE_ID,
-          user_id: EMAILJS_PUBLIC_KEY,
-          template_params: {
-            to_email: targetEmail,
-            from_name: senderName.trim(),
-            from_email: userEmail,
-            item_title: title,
-            subject: subject,
-            message: message,
-          },
-        }),
-      });
+      const response = await enviarContato({ toEmail: targetEmail, ...remetente, itemTitle: title, subject, message });
 
       if (response.ok) {
         setIsSuccess(true);
         setMessage('');
+        if (contatoPublicador) {
+          try {
+            await notificarContato(item?.docId || item?.id, currentUser, item?.sourceCollection || 'itens');
+          } catch {
+            Alert.alert('E-mail enviado', 'Sua mensagem foi enviada, mas não foi possível enviar o aviso ao aplicativo do publicador.');
+          }
+        }
       } else {
         const errorText = await response.text();
         console.error('Resposta de erro do EmailJS:', errorText);
-        Alert.alert('Erro ao enviar', `O serviço recusou o envio: ${errorText}`);
+        Alert.alert('Erro ao enviar', `O serviço recusou o envio: ${errorText}`, undefined, { variant: 'error' });
       }
     } catch (error) {
       console.error('Falha de conexão com a API:', error);
-      Alert.alert('Erro ao enviar', 'Não foi possível conectar ao servidor de e-mail. Verifique sua conexão.');
+      Alert.alert('Erro ao enviar', 'Não foi possível conectar ao servidor de e-mail. Verifique sua conexão.', undefined, { variant: 'error' });
     } finally {
       setIsSending(false);
     }
@@ -351,13 +340,28 @@ function ItemFullScreen({ navigation, route }) {
                   Destinatário: <Text style={styles.modalBold}>{targetEmail}</Text>
                 </Text>
 
-                <Text style={styles.inputLabel}>Seu Nome / Matrícula</Text>
+                <Text style={styles.inputLabel}>Seu nome</Text>
                 <TextInput
                   style={styles.input}
-                  placeholder="Ex: Maria Clara"
                   value={senderName}
                   onChangeText={setSenderName}
-                  placeholderTextColor={colors.gray_placeholder}
+                  editable={!accountContactName && !isSending}
+                  placeholder="Digite seu nome"
+                  accessibilityLabel={accountContactName ? 'Seu nome cadastrado na conta' : 'Seu nome'}
+                />
+
+                <Text style={styles.inputLabel}>Seu e-mail para resposta</Text>
+                <TextInput
+                  style={styles.input}
+                  value={senderEmail}
+                  onChangeText={setSenderEmail}
+                  editable={!usuario && !isSending}
+                  placeholder="Digite seu e-mail"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  autoComplete="email"
+                  accessibilityLabel="Seu e-mail para resposta"
                 />
 
                 <Text style={styles.inputLabel}>Assunto</Text>
@@ -452,6 +456,8 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...theme.typography.headerTitle,
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 8,
     textAlign: 'center',
   },
   backButton: {

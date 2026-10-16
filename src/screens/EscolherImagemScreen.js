@@ -1,5 +1,5 @@
 import { AppAlert as Alert } from '../services/alerts.js';
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Linking,
   Pressable,
@@ -11,110 +11,89 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { colors } from "../styles/colors";
+import { prepararImagem } from '../services/imagens.js';
+import { cameraExternaIndisponivel } from '../utils/camera.js';
 
-const MAX_IMAGE_DATA_URL_LENGTH = 800000;
 const IMAGE_PICKER_OPTIONS = {
   mediaTypes: ["images"],
-  allowsEditing: true,
-  aspect: [4, 3],
-  base64: true,
-  quality: 0.25,
+  allowsEditing: false,
+  base64: false,
+  quality: 1,
 };
 
 function EscolherImagem({ navigation, route }) {
   const insets = useSafeAreaInsets();
   const origem = route?.params?.origem || "CadastrarItem";
+  const [processando, setProcessando] = useState(false);
+  const mounted = useRef(true);
+  const abrindoSeletor = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+    return () => { mounted.current = false; };
+  }, []);
 
-  function retornarImagem(asset) {
-    if (!asset?.base64) {
-      Alert.alert("Imagem inválida", "Não foi possível carregar os dados da imagem.");
-      return;
+  async function retornarImagem(asset) {
+    setProcessando(true);
+    try {
+      const dataUrl = await prepararImagem(asset);
+      if (mounted.current) navigation.navigate(origem, { imagemRecebida: dataUrl });
+    } catch (error) {
+      if (mounted.current) Alert.alert('Imagem inválida', error.message || 'Não foi possível preparar a imagem.', undefined, { variant: 'error' });
+    } finally {
+      if (mounted.current) setProcessando(false);
     }
-
-    const mimeType = asset.mimeType || "image/jpeg";
-    const dataUrl = `data:${mimeType};base64,${asset.base64}`;
-
-    if (dataUrl.length > MAX_IMAGE_DATA_URL_LENGTH) {
-      Alert.alert(
-        "Imagem muito grande",
-        "Escolha uma imagem menor ou tire outra foto para caber no cadastro."
-      );
-      return;
-    }
-
-    // Navegação corrigida sem o aviso (warning) amarelo
-    navigation.navigate(origem, { imagemRecebida: dataUrl });
   }
 
-  async function escolherGaleria() {
-    // 1. Obter status atual das permissões
-    let status = await ImagePicker.getMediaLibraryPermissionsAsync();
-
-    // 2. Se não foi concedido ainda, solicitar permissão
-    if (!status.granted) {
-      status = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    }
-
-    // 3. Se negado permanentemente ou sem permissão
-    if (!status.granted) {
-      if (!status.canAskAgain) {
-        Alert.alert(
-          "Permissão Negada",
-          "O acesso à galeria foi bloqueado nas configurações do dispositivo. Deseja abrir as configurações para permitir?",
-          [
-            { text: "Cancelar", style: "cancel" },
-            { text: "Abrir Configurações", onPress: () => Linking.openSettings() },
-          ]
-        );
-      } else {
-        Alert.alert("Permissão necessária", "Permita o acesso às fotos para escolher uma imagem.");
+  async function selecionarImagem(usarCamera) {
+    if (abrindoSeletor.current) return;
+    abrindoSeletor.current = true;
+    setProcessando(true);
+    try {
+      let status = usarCamera
+        ? await ImagePicker.getCameraPermissionsAsync()
+        : await ImagePicker.getMediaLibraryPermissionsAsync();
+      if (!status.granted && status.canAskAgain) {
+        status = usarCamera
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
       }
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync(IMAGE_PICKER_OPTIONS);
-
-    if (!result.canceled) {
-      retornarImagem(result.assets[0]);
-    }
-  }
-
-  async function tirarFoto() {
-    // 1. Obter status atual das permissões de câmera
-    let status = await ImagePicker.getCameraPermissionsAsync();
-
-    // 2. Se não foi concedido ainda, solicitar permissão
-    if (!status.granted) {
-      status = await ImagePicker.requestCameraPermissionsAsync();
-    }
-
-    // 3. Se negado permanentemente ou sem permissão
-    if (!status.granted) {
-      if (!status.canAskAgain) {
-        Alert.alert(
-          "Permissão Negada",
-          "O acesso à câmera foi bloqueado nas configurações do dispositivo. Deseja abrir as configurações para permitir?",
-          [
-            { text: "Cancelar", style: "cancel" },
-            { text: "Abrir Configurações", onPress: () => Linking.openSettings() },
-          ]
-        );
-      } else {
-        Alert.alert("Permissão necessária", "Permita o acesso à câmera para tirar uma foto.");
+      if (!mounted.current) return;
+      if (!status.granted) {
+        const acesso = usarCamera ? 'câmera' : 'galeria';
+        if (!status.canAskAgain) {
+          Alert.alert('Permissão necessária', 'Permita o acesso à ' + acesso + ' nas configurações do dispositivo.', [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Abrir configurações', onPress: () => Linking.openSettings().catch(() => Alert.alert('Aviso', 'Não foi possível abrir as configurações.', undefined, { variant: 'error' })) },
+          ]);
+        } else {
+          Alert.alert('Permissão necessária', 'Permita o acesso à ' + acesso + ' para adicionar uma foto.');
+        }
+        return;
       }
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync(IMAGE_PICKER_OPTIONS);
-
-    if (!result.canceled) {
-      retornarImagem(result.assets[0]);
+      const result = usarCamera
+        ? await ImagePicker.launchCameraAsync(IMAGE_PICKER_OPTIONS)
+        : await ImagePicker.launchImageLibraryAsync(IMAGE_PICKER_OPTIONS);
+      if (mounted.current && !result.canceled) await retornarImagem(result.assets?.[0]);
+    } catch (error) {
+      if (!mounted.current) return;
+      if (usarCamera && cameraExternaIndisponivel(error)) {
+        navigation.navigate('CameraItem', { origem });
+      } else {
+        Alert.alert(usarCamera ? 'Câmera indisponível' : 'Galeria indisponível',
+          usarCamera ? 'Não foi possível abrir a câmera. Tente novamente ou selecione uma foto da galeria.' : 'Não foi possível abrir a galeria. Tente novamente.', undefined, { variant: 'error' });
+      }
+    } finally {
+      abrindoSeletor.current = false;
+      if (mounted.current) setProcessando(false);
     }
   }
+
+  const escolherGaleria = () => selecionarImagem(false);
+  const tirarFoto = () => selecionarImagem(true);
 
   return (
     <View style={styles.overlay}>
-      <Pressable style={styles.backdrop} onPress={() => navigation.goBack()} />
+      <Pressable style={styles.backdrop} disabled={processando} onPress={() => navigation.goBack()} />
 
       <View
         style={[
@@ -125,8 +104,8 @@ function EscolherImagem({ navigation, route }) {
         <View style={styles.dragIndicator} />
 
         <Text style={styles.sheetTitle}>Adicionar Foto</Text>
-        <Text style={styles.sheetSubtitle}>
-          Selecione de onde quer escolher a imagem do item
+        <Text style={styles.sheetSubtitle} accessibilityLiveRegion="polite">
+          {processando ? 'Preparando foto em alta qualidade...' : 'Selecione de onde quer escolher a imagem do item'}
         </Text>
 
         <View style={styles.optionsContainer}>
@@ -136,6 +115,7 @@ function EscolherImagem({ navigation, route }) {
               pressed && styles.optionButtonPressed,
             ]}
             onPress={tirarFoto}
+            disabled={processando}
           >
             <View style={styles.iconCircle}>
               <Ionicons name="camera-outline" size={26} color={colors.green_primary} />
@@ -153,6 +133,7 @@ function EscolherImagem({ navigation, route }) {
               pressed && styles.optionButtonPressed,
             ]}
             onPress={escolherGaleria}
+            disabled={processando}
           >
             <View style={styles.iconCircle}>
               <Ionicons name="images-outline" size={26} color={colors.green_primary} />
@@ -171,6 +152,7 @@ function EscolherImagem({ navigation, route }) {
             pressed && styles.cancelButtonPressed,
           ]}
           onPress={() => navigation.goBack()}
+          disabled={processando}
         >
           <Text style={styles.cancelText}>Cancelar</Text>
         </Pressable>

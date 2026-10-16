@@ -1,3 +1,8 @@
+import { toMillis, formatDate } from '../utils/datas.js';
+import { FILTROS_MURAL, normalizarCategoria } from '../constants/categorias.js';
+import UserAvatar from '../components/UserAvatar.js';
+import { normalizeText } from '../utils/texto.js';
+import { podePublicar } from '../utils/permissoes.js';
 import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
@@ -18,32 +23,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 
 import { colors } from '../styles/colors.js';
-import { observarAutenticacao } from '../services/auth.js';
+import { useAuth } from '../hooks/useAuth.js';
 import {
   COLECOES_PUBLICACOES,
   observarPublicacoes,
 } from '../services/publicacoes.js';
 
-const DEFAULT_FILTERS = [
-  'Material escolar',
-  'Utensílio pessoal',
-  'Caderno',
-  'Garrafa',
-  'Celular',
-];
+const DEFAULT_FILTERS = FILTROS_MURAL;
 
 const logoImage = require('../assets/images/mural-caixa.png');
 const bottleImage = require('../assets/images/garrafa.png');
 const notebookImage = require('../assets/images/caderno.png');
 const caseImage = require('../assets/images/estojo.png');
 
-function normalizeText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
-}
 
 function firstValue(data, keys) {
   for (const key of keys) {
@@ -59,77 +51,6 @@ function firstValue(data, keys) {
   }
 
   return '';
-}
-
-function toMillis(value) {
-  if (!value) return 0;
-
-  if (typeof value.toMillis === 'function') {
-    return value.toMillis();
-  }
-
-  if (typeof value.toDate === 'function') {
-    return value.toDate().getTime();
-  }
-
-  if (typeof value.seconds === 'number') {
-    return value.seconds * 1000;
-  }
-
-  if (typeof value === 'number') {
-    return value < 10000000000 ? value * 1000 : value;
-  }
-
-  if (typeof value === 'string') {
-    const trimmed = value.trim();
-
-    const brDate = trimmed.match(
-      /^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/
-    );
-
-    if (brDate) {
-      const [
-        ,
-        day,
-        month,
-        year,
-        hour = '0',
-        minute = '0',
-      ] = brDate;
-
-      return new Date(
-        Number(year),
-        Number(month) - 1,
-        Number(day),
-        Number(hour),
-        Number(minute)
-      ).getTime();
-    }
-
-    const parsed = Date.parse(trimmed);
-
-    return Number.isNaN(parsed) ? 0 : parsed;
-  }
-
-  return 0;
-}
-
-function pad(value) {
-  return String(value).padStart(2, '0');
-}
-
-function formatDate(value) {
-  const millis = toMillis(value);
-
-  if (!millis) return '';
-
-  const date = new Date(millis);
-
-  return `${pad(date.getDate())}/${pad(
-    date.getMonth() + 1
-  )}/${date.getFullYear()} ${pad(date.getHours())}:${pad(
-    date.getMinutes()
-  )}`;
 }
 
 function normalizeItem(docId, data, sourceCollection) {
@@ -195,7 +116,7 @@ function normalizeItem(docId, data, sourceCollection) {
 
   const title = String(rawTitle || 'Item sem título');
   const description = String(rawDescription || '');
-  const category = String(rawCategory || '');
+  const category = normalizarCategoria(rawCategory);
 
   const location = String(
     firstValue(data, [
@@ -267,7 +188,7 @@ function HomeScreen({ navigation }) {
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
 
-  const [currentUser, setCurrentUser] = useState(null);
+  const { usuario: currentUser } = useAuth();
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
@@ -279,18 +200,9 @@ function HomeScreen({ navigation }) {
   const filterOptionsProgress = React.useRef(new Animated.Value(0)).current;
   const [showFilterOptions, setShowFilterOptions] = useState(false);
 
-  const primeiraLetraUser = currentUser?.email
-    ? currentUser.email.charAt(0).toUpperCase()
-    : '?';
-
   // Ajustado para usar apenas o padding exato do topo do dispositivo
   const topPadding = insets.top + 6;
 
-  useEffect(() => {
-    return observarAutenticacao((user) => {
-      setCurrentUser(user);
-    });
-  }, []);
 
   useEffect(() => {
     return observarPublicacoes(
@@ -483,12 +395,13 @@ function HomeScreen({ navigation }) {
   function renderHeader() {
     return (
       <View style={styles.listHeader}>
-        <Text style={styles.title}>
-          Mural de Achados e Perdidos
-        </Text>
+        <View style={styles.titleGroup} accessible accessibilityRole="header" accessibilityLabel="Mural, Achados e Perdidos">
+          <Text style={styles.title}>MURAL</Text>
+          <Text style={styles.titleSubtitle}>Achados e Perdidos</Text>
+        </View>
 
         <View style={styles.controlsCard}>
-          {currentUser ? (
+          {podePublicar(currentUser) ? (
             <>
               <Pressable
                 accessibilityRole="button"
@@ -749,7 +662,7 @@ function HomeScreen({ navigation }) {
           <View style={styles.logoSurface}>
             <Image source={logoImage} style={styles.logo} />
           </View>
-          
+
 
           <Pressable
             accessibilityRole="button"
@@ -758,15 +671,13 @@ function HomeScreen({ navigation }) {
             }
             style={
               currentUser
-                ? styles.profileButton
+                ? undefined
                 : styles.loginButton
             }
             onPress={handleAuthPress}
           >
             {currentUser ? (
-              <Text style={styles.profileInitial}>
-                {primeiraLetraUser}
-              </Text>
+              <UserAvatar user={currentUser} />
             ) : (
               <>
                 <Ionicons
@@ -903,32 +814,6 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
 
-  profileButton: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.white,
-    borderWidth: 2,
-    borderColor: '#d8ded4',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 3,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 7,
-  },
-
-  profileInitial: {
-    color: colors.green_primary,
-    fontSize: 21,
-    fontFamily: 'MontserratExtraBold',
-    includeFontPadding: false,
-  },
-
   loginButton: {
     height: 44,
     minWidth: 96,
@@ -967,12 +852,30 @@ const styles = StyleSheet.create({
     gap: 16,
   },
 
+  titleGroup: {
+    alignItems: 'center',
+    gap: 8,
+    paddingTop: 2,
+    paddingBottom: 10,
+  },
+
   title: {
-    color: colors.green_primary,
-    fontSize: 27,
+    color: colors.green_dark,
+    fontSize: 36,
     textAlign: 'center',
-    lineHeight: 32,
+    lineHeight: 30,
+    letterSpacing: 1,
     fontFamily: 'MontserratExtraBold',
+    includeFontPadding: false,
+  },
+
+  titleSubtitle: {
+    color: colors.text_body,
+    fontSize: 16,
+    lineHeight: 20,
+    letterSpacing: 2,
+    textAlign: 'center',
+    fontFamily: 'MontserratMedium',
     includeFontPadding: false,
   },
 

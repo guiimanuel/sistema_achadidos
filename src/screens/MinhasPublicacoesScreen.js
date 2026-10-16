@@ -1,3 +1,5 @@
+import { formatPublicationDate as formatDate } from '../utils/datas.js';
+import { normalizeText } from '../utils/texto.js';
 import { AppAlert as Alert } from '../services/alerts.js';
 import React, {
   useCallback,
@@ -14,19 +16,13 @@ import {
   View,
 } from 'react-native';
 
-import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-} from 'firebase/firestore';
 
 import { useFocusEffect } from '@react-navigation/native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
 
-import { db } from '../config/firebase.js';
+import { listarMinhasPublicacoes, excluirPublicacao } from '../services/publicacoes.js';
 import { usuarioAtual } from '../services/auth.js';
 import { colors } from '../styles/colors.js';
 
@@ -35,13 +31,6 @@ const bottleImage = require('../assets/images/garrafa.png');
 const notebookImage = require('../assets/images/caderno.png');
 const caseImage = require('../assets/images/estojo.png');
 
-function normalizeText(value) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
-}
 
 function getFallbackImage(item) {
   const text = normalizeText(
@@ -84,128 +73,6 @@ function getImageSource(item) {
   return getFallbackImage(item);
 }
 
-function getDateMillis(value) {
-  if (!value) return 0;
-
-  if (
-    typeof value.toMillis ===
-    'function'
-  ) {
-    return value.toMillis();
-  }
-
-  if (
-    typeof value.toDate ===
-    'function'
-  ) {
-    return value.toDate().getTime();
-  }
-
-  if (
-    typeof value.seconds ===
-    'number'
-  ) {
-    return value.seconds * 1000;
-  }
-
-  if (typeof value === 'number') {
-    return value;
-  }
-
-  return 0;
-}
-
-function formatDate(value) {
-  const millis = getDateMillis(value);
-
-  if (!millis) return '';
-
-  const date = new Date(millis);
-
-  const day = String(
-    date.getDate()
-  ).padStart(2, '0');
-
-  const month = String(
-    date.getMonth() + 1
-  ).padStart(2, '0');
-
-  const year = date.getFullYear();
-
-  const hour = String(
-    date.getHours()
-  ).padStart(2, '0');
-
-  const minute = String(
-    date.getMinutes()
-  ).padStart(2, '0');
-
-  return `${day}/${month}/${year} ${hour}:${minute}`;
-}
-
-function normalizePublicacao(
-  docSnapshot
-) {
-  const data = docSnapshot.data();
-
-  return {
-    id: docSnapshot.id,
-
-    titulo:
-      data.titulo ||
-      data.title ||
-      data.nome ||
-      'Item sem título',
-
-    descricao:
-      data.descricao ||
-      data.description ||
-      data.texto ||
-      data.detalhes ||
-      '',
-
-    categoria:
-      data.categoria ||
-      data.categoriaNome ||
-      data.category ||
-      data.tipo ||
-      data.filtro ||
-      '',
-
-    imageUrl:
-      data.imageUrl ||
-      data.imagem ||
-      data.fotoUrl ||
-      data.photoUrl ||
-      data.image ||
-      data.foto ||
-      '',
-
-    userId:
-      data.userId ||
-      data.uid ||
-      data.id_usuario ||
-      data.usuarioId ||
-      '',
-
-    userEmail:
-      data.userEmail ||
-      data.email ||
-      data.usuarioEmail ||
-      '',
-
-    createdAt:
-      data.createdAt ||
-      data.dataCriacao ||
-      data.data ||
-      null,
-
-    status: data.status || 'disponivel',
-
-    expiraEm: data.expiraEm || null,
-  };
-}
-
 function MinhasPublicacoesScreen({
   navigation,
 }) {
@@ -235,66 +102,7 @@ function MinhasPublicacoesScreen({
           return;
         }
 
-        const snapshot =
-          await getDocs(
-            collection(db, 'itens')
-          );
-
-        const minhasPublicacoes = [];
-        const agora = Date.now();
-
-        snapshot.forEach(
-          (docSnapshot) => {
-            const data =
-              docSnapshot.data();
-
-            const userId = String(
-              data.userId ||
-              data.uid ||
-              data.ownerId ||
-              ''
-            );
-
-            const userEmail = String(
-              data.userEmail ||
-              data.email ||
-              data.ownerEmail ||
-              ''
-            );
-
-            const pertenceAoUsuario =
-              userId === user.uid ||
-              (
-                user.email &&
-                userEmail.toLowerCase() ===
-                user.email.toLowerCase()
-              );
-
-            if (pertenceAoUsuario) {
-              const itemNormalizado = normalizePublicacao(docSnapshot);
-
-              // Oculta itens marcados como "achado" que já ultrapassaram o tempo limite
-              const jaExpirou =
-                itemNormalizado.status === 'achado' &&
-                itemNormalizado.expiraEm &&
-                agora >= itemNormalizado.expiraEm;
-
-              if (!jaExpirou) {
-                minhasPublicacoes.push(itemNormalizado);
-              }
-            }
-          }
-        );
-
-        minhasPublicacoes.sort(
-          (a, b) =>
-            getDateMillis(
-              b.createdAt
-            ) -
-            getDateMillis(
-              a.createdAt
-            )
-        );
+        const minhasPublicacoes = await listarMinhasPublicacoes(user);
 
         setPublicacoes(
           minhasPublicacoes
@@ -307,7 +115,7 @@ function MinhasPublicacoesScreen({
 
         Alert.alert(
           'Erro',
-          'Não foi possível carregar suas publicações.'
+          'Não foi possível carregar suas publicações.', undefined, { variant: 'error' }
         );
       } finally {
         setLoading(false);
@@ -335,13 +143,7 @@ function MinhasPublicacoesScreen({
 
           onPress: async () => {
             try {
-              await deleteDoc(
-                doc(
-                  db,
-                  'itens',
-                  item.id
-                )
-              );
+              await excluirPublicacao(item);
 
               setPublicacoes(
                 (listaAtual) =>
@@ -352,7 +154,7 @@ function MinhasPublicacoesScreen({
                   )
               );
 
-              Alert.alert(
+              Alert.toast(
                 'Sucesso',
                 'Publicação excluída.'
               );
@@ -364,7 +166,7 @@ function MinhasPublicacoesScreen({
 
               Alert.alert(
                 'Erro',
-                'Não foi possível excluir a publicação.'
+                'Não foi possível excluir a publicação.', undefined, { variant: 'error' }
               );
             }
           },
@@ -526,7 +328,7 @@ function MinhasPublicacoesScreen({
             <Ionicons
               name="trash-outline"
               size={18}
-              color={colors.white}
+              color={colors.error}
             />
 
             <Text
@@ -705,6 +507,8 @@ const styles = StyleSheet.create({
 
   headerTitle: {
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 8,
     textAlign: 'center',
     color: colors.white,
     fontSize: 20,
@@ -877,7 +681,9 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 40,
     borderRadius: 8,
-    backgroundColor: '#d9534f',
+    backgroundColor: '#fee2e2',
+    borderColor: colors.error,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent:
       'center',
@@ -886,7 +692,7 @@ const styles = StyleSheet.create({
   },
 
   deleteButtonText: {
-    color: colors.white,
+    color: colors.error,
     fontSize: 12,
     fontFamily:
       'MontserratBold',

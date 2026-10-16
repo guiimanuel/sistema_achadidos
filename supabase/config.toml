@@ -1,0 +1,7 @@
+project_id = "sistema-achadidos-push"
+
+[functions.push-api]
+verify_jwt = false
+
+[functions.push-worker]
+verify_jwt = false

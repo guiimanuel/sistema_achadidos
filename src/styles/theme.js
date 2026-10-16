@@ -13,6 +13,7 @@ export const theme = {
   },
   typography: {
     headerTitle: {
+      textAlign: 'center',
       fontFamily: 'MontserratBold',
       fontSize: 18,
       color: colors.white,

@@ -1,3 +1,4 @@
+import { CATEGORIAS } from '../constants/categorias.js';
 import { AppAlert as Alert } from '../services/alerts.js';
 import React, { useState } from 'react';
 import {
@@ -18,7 +19,7 @@ import { criarPublicacao } from '../services/publicacoes.js';
 import { usuarioAtual } from '../services/auth.js';
 import { colors } from '../styles/colors.js';
 
-const filtros = ['Caderno', 'Material escolar', 'Utensílio pessoal', 'Celular', 'Garrafa'];
+const filtros = CATEGORIAS;
 
 function CadastrarItem({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -26,6 +27,7 @@ function CadastrarItem({ navigation, route }) {
   const [descricao, setDescricao] = useState('');
   const [filtroSelecionado, setFiltroSelecionado] = useState('');
   const [publicando, setPublicando] = useState(false);
+  const [previewSize, setPreviewSize] = useState(null);
 
   const imagemRecebida = route?.params?.imagemRecebida || '';
   const topPadding = insets.top + 16;
@@ -67,14 +69,14 @@ function CadastrarItem({ navigation, route }) {
       });
 
       console.log('Item publicado com ID:', publicacaoRef.id);
-      Alert.alert('Publicado', 'Item cadastrado com sucesso.');
+      Alert.toast('Publicado', 'Item cadastrado com sucesso.');
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home', params: { publishedItemId: publicacaoRef.id } }],
       });
     } catch (error) {
       console.log('Erro ao publicar item:', error);
-      Alert.alert('Erro ao publicar', getPublishErrorMessage(error));
+      Alert.alert('Erro ao publicar', getPublishErrorMessage(error), undefined, { variant: 'error' });
     } finally {
       setPublicando(false);
     }
@@ -107,12 +109,25 @@ function CadastrarItem({ navigation, route }) {
         <Text style={styles.sectionLabel}>Imagem do Item</Text>
         <View style={styles.imageCard}>
           <Pressable
-            style={styles.imageBox}
+            style={[styles.imageBox, previewSize?.uri === imagemRecebida && {
+              height: undefined,
+              aspectRatio: previewSize.aspectRatio,
+            }]}
             onPress={() => navigation.navigate('EscolherImagem', { origem: 'CadastrarItem' })}
             disabled={publicando}
           >
             {imagemRecebida ? (
-              <Image source={{ uri: imagemRecebida }} style={styles.preview} resizeMode="cover" />
+              <Image
+                source={{ uri: imagemRecebida }}
+                style={styles.preview}
+                resizeMode="contain"
+                onLoad={({ nativeEvent }) => {
+                  const { width, height } = nativeEvent.source;
+                  if (width > 0 && height > 0) {
+                    setPreviewSize({ uri: imagemRecebida, aspectRatio: width / height });
+                  }
+                }}
+              />
             ) : (
               <View style={styles.placeholderContainer}>
                 <Ionicons name="camera-outline" size={38} color="#7f8a7b" />
@@ -218,7 +233,7 @@ export default CadastrarItem;
 
 function getPublishErrorMessage(error) {
   if (error?.code === 'permission-denied') {
-    return 'O Firebase bloqueou o cadastro. Confirme se você está logado com email @discente.ifpe.edu.br e se as regras do Firestore foram publicadas.';
+    return 'O Firebase bloqueou a publicação. Confirme seu e-mail e verifique as permissões da conta. Contas de discentes não podem publicar.';
   }
 
   if (error?.code === 'unavailable') {
@@ -265,6 +280,8 @@ const styles = StyleSheet.create({
 
   headerTitle: {
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 8,
     textAlign: 'center',
     color: colors.white,
     fontSize: 20,
@@ -287,7 +304,8 @@ const styles = StyleSheet.create({
   imageCard: {
     backgroundColor: colors.white,
     borderRadius: 14,
-    padding: 12,
+    padding: 6,
+    marginHorizontal: -12,
     alignItems: 'center',
     marginBottom: 20,
     borderWidth: 1,
@@ -301,7 +319,7 @@ const styles = StyleSheet.create({
 
   imageBox: {
     width: '100%',
-    height: 180,
+    height: 260,
     backgroundColor: '#f0f3ee',
     borderRadius: 10,
     overflow: 'hidden',

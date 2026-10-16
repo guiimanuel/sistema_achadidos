@@ -1,3 +1,4 @@
+import { CATEGORIAS, normalizarCategoria } from '../constants/categorias.js';
 import { AppAlert as Alert } from '../services/alerts.js';
 import React, { useEffect, useState } from "react";
 import {
@@ -21,7 +22,7 @@ import {
 } from "../services/publicacoes.js";
 import { colors } from "../styles/colors.js";
 
-const filtros = ["Caderno", "Material escolar", "Utensílio pessoal", "Celular", "Garrafa"];
+const filtros = CATEGORIAS;
 
 function EditarItem({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -30,8 +31,9 @@ function EditarItem({ navigation, route }) {
   const [titulo, setTitulo] = useState(item?.titulo || item?.title || "");
   const [descricao, setDescricao] = useState(item?.descricao || item?.description || "");
   const [imagem, setImagem] = useState(item?.imageUrl || "");
+  const [previewSize, setPreviewSize] = useState(null);
   const [filtroSelecionado, setFiltroSelecionado] = useState(
-    item?.filtro || item?.category || ""
+    normalizarCategoria(item?.filtro || item?.category || item?.categoria)
   );
 
   const [salvando, setSalvando] = useState(false);
@@ -48,7 +50,7 @@ function EditarItem({ navigation, route }) {
 
   async function salvarEdicao() {
     if (!item) {
-      Alert.alert("Erro", "Publicação não encontrada.");
+      Alert.alert("Erro", "Publicação não encontrada.", undefined, { variant: 'error' });
       return;
     }
 
@@ -71,10 +73,11 @@ function EditarItem({ navigation, route }) {
         imagem,
       });
 
+      Alert.toast('Alterações salvas', 'Publicação atualizada com sucesso.');
       navigation.navigate("Home");
     } catch (error) {
       console.log("Erro ao salvar edição:", error);
-      Alert.alert("Erro ao salvar", error.message || "Não foi possível salvar a edição.");
+      Alert.alert("Erro ao salvar", error.message || "Não foi possível salvar a edição.", undefined, { variant: 'error' });
     } finally {
       setSalvando(false);
     }
@@ -97,10 +100,11 @@ function EditarItem({ navigation, route }) {
     try {
       setMarcandoAchado(true);
       await marcarComoAchado(item, 24);
+      Alert.toast('Item encontrado', 'O selo de achado já aparece no mural.');
       navigation.navigate("Home");
     } catch (error) {
       console.log("Erro ao marcar como achado:", error);
-      Alert.alert("Erro", "Não foi possível atualizar o status do item.");
+      Alert.alert("Erro", "Não foi possível atualizar o status do item.", undefined, { variant: 'error' });
     } finally {
       setMarcandoAchado(false);
     }
@@ -119,17 +123,18 @@ function EditarItem({ navigation, route }) {
 
   async function excluirItem() {
     if (!item) {
-      Alert.alert("Erro", "Publicação não encontrada.");
+      Alert.alert("Erro", "Publicação não encontrada.", undefined, { variant: 'error' });
       return;
     }
 
     try {
       setExcluindo(true);
       await excluirPublicacao(item);
+      Alert.toast('Publicação excluída', 'O item foi removido do mural.');
       navigation.navigate("Home");
     } catch (error) {
       console.log("Erro ao excluir item:", error);
-      Alert.alert("Erro ao excluir", error.message || "Não foi possível excluir a publicação.");
+      Alert.alert("Erro ao excluir", error.message || "Não foi possível excluir a publicação.", undefined, { variant: 'error' });
     } finally {
       setExcluindo(false);
     }
@@ -164,12 +169,25 @@ function EditarItem({ navigation, route }) {
         <Text style={styles.sectionLabel}>Imagem do Item</Text>
         <View style={styles.imageCard}>
           <Pressable
-            style={styles.imageBox}
+            style={[styles.imageBox, previewSize?.uri === imagem && {
+              height: undefined,
+              aspectRatio: previewSize.aspectRatio,
+            }]}
             onPress={() => navigation.navigate("EscolherImagem", { origem: "EditarItem" })}
             disabled={desabilitado}
           >
             {imagem ? (
-              <Image source={{ uri: imagem }} style={styles.preview} resizeMode="cover" />
+              <Image
+                source={{ uri: imagem }}
+                style={styles.preview}
+                resizeMode="contain"
+                onLoad={({ nativeEvent }) => {
+                  const { width, height } = nativeEvent.source;
+                  if (width > 0 && height > 0) {
+                    setPreviewSize({ uri: imagem, aspectRatio: width / height });
+                  }
+                }}
+              />
             ) : (
               <View style={styles.placeholderContainer}>
                 <Ionicons name="camera-outline" size={36} color="#7f8a7b" />
@@ -332,6 +350,8 @@ const styles = StyleSheet.create({
 
   headerTitle: {
     flex: 1,
+    minWidth: 0,
+    paddingHorizontal: 8,
     textAlign: 'center',
     color: colors.white,
     fontSize: 20,
@@ -354,7 +374,8 @@ const styles = StyleSheet.create({
   imageCard: {
     backgroundColor: colors.white,
     borderRadius: 14,
-    padding: 12,
+    padding: 6,
+    marginHorizontal: -12,
     alignItems: "center",
     marginBottom: 20,
     borderWidth: 1,
@@ -368,7 +389,7 @@ const styles = StyleSheet.create({
 
   imageBox: {
     width: "100%",
-    height: 180,
+    height: 260,
     backgroundColor: "#f0f3ee",
     borderRadius: 10,
     overflow: "hidden",

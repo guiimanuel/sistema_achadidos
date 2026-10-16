@@ -1,8 +1,9 @@
 {
   "expo": {
     "name": "system_achadidos",
-    "slug": "system_achadidos",
-    "icon": "./src/icons/icone.png",
+    "slug": "achadidos",
+    "owner": "guiimanuel",
+    "icon": "./src/assets/icons/icone.png",
     "version": "1.0.2",
     "backgroundColor": "#059600",
     "userInterfaceStyle": "light",
@@ -12,8 +13,9 @@
       "translucent": true
     },
     "android": {
-      "package": "com.systemachadidos",
-      "icon": "./src/icons/mural-caixa.png",
+      "package": "com.company.achadidos",
+      "googleServicesFile": "./android/app/google-services.json",
+      "icon": "./src/assets/icons/mural-caixa.png",
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.CAMERA",
@@ -26,7 +28,8 @@
       "infoPlist": {
         "NSCameraUsageDescription": "Permita que o Achados e Perdidos use a câmera para fotografar itens encontrados ou perdidos.",
         "NSPhotoLibraryUsageDescription": "Permita que o Achados e Perdidos acesse suas fotos para anexar imagens às publicações."
-      }
+      },
+      "googleServicesFile": "./ios/GoogleService-Info.plist"
     },
     "plugins": [
       [
@@ -37,11 +40,25 @@
           "microphonePermission": false
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Permita que o Achados e Perdidos use a câmera para fotografar itens.",
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "defaultChannel": "novos-itens"
+        }
+      ],
+      "react-native-nitro-google-signin"
     ],
     "extra": {
       "eas": {
-        "projectId": "227fc762-2dd9-4648-ac36-51416207bdc8"
+        "projectId": "ad3b0b7d-22ee-412d-bc1b-0d68a6f29cc5"
       }
     }
   }

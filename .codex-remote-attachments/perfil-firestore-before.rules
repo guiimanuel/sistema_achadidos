@@ -1,0 +1,70 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function canPublish() {
+      return signedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email_verified == true
+        && !request.auth.token.email.lower().matches('.*@discente[.]ifpe[.]edu[.]br$');
+    }
+
+    function validItemData() {
+      return request.resource.data.keys().hasOnly([
+          'titulo',
+          'descricao',
+          'filtro',
+          'categoria',
+          'imageUrl',
+          'userId',
+          'userEmail',
+          'createdAt',
+          'updatedAt',
+          'status',
+          'expiraEm'
+        ])
+        && request.resource.data.titulo is string
+        && request.resource.data.titulo.size() > 0
+        && request.resource.data.descricao is string
+        && request.resource.data.filtro is string
+        && request.resource.data.categoria is string
+        && request.resource.data.categoria in ['Material escolar', 'Eletrônicos', 'Documentos', 'Chaves', 'Roupas e acessórios', 'Bolsas e mochilas', 'Garrafas e recipientes', 'Outros']
+        && request.resource.data.filtro == request.resource.data.categoria
+        && request.resource.data.imageUrl is string
+        && request.resource.data.imageUrl.size() <= 1048486
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt == request.time
+        && (!('status' in request.resource.data) || request.resource.data.status in ['disponivel', 'achado'])
+        && (!('expiraEm' in request.resource.data) || request.resource.data.expiraEm == null || request.resource.data.expiraEm is number)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.userEmail == request.auth.token.email;
+    }
+
+    function ownsExistingItem() {
+      return signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /itens/{itemId} {
+      allow read: if true;
+      allow create: if canPublish() && validItemData()
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.status == 'disponivel'
+        && request.resource.data.expiraEm == null;
+      allow update: if canPublish() && ownsExistingItem() && validItemData()
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if canPublish() && ownsExistingItem();
+    }
+
+    match /item/{itemId} {
+      allow read: if true;
+      allow create: if false;
+      allow update: if canPublish() && ownsExistingItem() && validItemData()
+        && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if canPublish() && ownsExistingItem();
+    }
+  }
+}

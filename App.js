@@ -1,119 +1,22 @@
-import * as React from 'react';
-import {
-  View,
-  Text,
-  ActivityIndicator,
-  TouchableOpacity,
-} from 'react-native';
+import React from 'react';
+import { View, Text, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { Ionicons } from '@expo/vector-icons';
-
-import {
-  useFonts,
-  Montserrat_600SemiBold,
-  Montserrat_700Bold,
-  Montserrat_800ExtraBold,
-} from '@expo-google-fonts/montserrat';
-
+import { useExpoFonts } from './src/hooks/useExpoFonts';
+import AppNavigator from './src/navigation/AppNavigator';
 import AppAlertHost from './src/components/AppAlertHost';
-import LoginScreen from './src/screens/LoginScreen';
-import CadastroScreen from './src/screens/CadastroScreen';
-import AlterarSenhaScreen from './src/screens/AlterarSenhaScreen';
-import HomeScreen from './src/screens/HomeScreen';
-import CadastrarItemScreen from './src/screens/CadastrarItemScreen';
-import EditarItemScreen from './src/screens/EditarItemScreen';
-import ItemFullScreen from './src/screens/ItemFullScreen';
-import EscolherImagemScreen from './src/screens/EscolherImagemScreen';
-import EscolherImagemEditarScreen from './src/screens/EscolherImagemEditarScreen';
-import MinhasPublicacoesScreen from './src/screens/MinhasPublicacoesScreen';
-import PerfilScreen from './src/screens/PerfilScreen';
-
+import { AuthProvider } from './src/providers/AuthProvider';
 import { colors } from './src/styles/colors';
-import { theme } from './src/styles/theme';
 
-import './src/config/firebase';
+export default function App() {
+  const { fontsLoaded, fontError } = useExpoFonts();
 
-const Stack = createNativeStackNavigator();
-
-// ===============================
-// HEADER COMPONENTE COM SAFE AREA
-// ===============================
-
-const CustomHeader = ({ navigation, showBackButton = false, title = 'ACHADOS E PERDIDOS' }) => {
-  const insets = useSafeAreaInsets();
-
-  return (
-    <View
-      style={{
-        paddingTop: insets.top,
-        backgroundColor: colors.green_primary,
-        borderBottomRightRadius: 20,
-        borderBottomLeftRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: 80 + insets.top,
-        shadowColor: colors.black,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.15,
-        shadowRadius: 4,
-        elevation: 5,
-        position: 'relative',
-      }}
-    >
-      {showBackButton && (
-        <TouchableOpacity
-          style={{
-            position: 'absolute',
-            left: 16,
-            top: insets.top + 16,
-            width: 48,
-            height: 48,
-            borderRadius: 24,
-            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10,
-          }}
-          onPress={() => navigation.navigate('Home')}
-          accessibilityRole="button"
-          accessibilityLabel="Voltar para Home"
-        >
-          <Ionicons name="arrow-back" size={28} color={colors.white} />
-        </TouchableOpacity>
-      )}
-
-      <Text style={[theme.typography.headerTitle, { textAlign: 'center', paddingHorizontal: showBackButton ? 72 : 16 }]}>
-        {title}
-      </Text>
-    </View>
-  );
-};
-
-// ===============================
-// APP
-// ===============================
-
-function App() {
-  const [fontsLoaded] = useFonts({
-    MontserratSemiBold: Montserrat_600SemiBold,
-    MontserratBold: Montserrat_700Bold,
-    MontserratExtraBold: Montserrat_800ExtraBold,
-  });
+  if (fontError) return <View style={{ flex: 1, justifyContent: 'center', padding: 24 }}><Text>Não foi possível carregar as fontes. Reinicie o aplicativo.</Text></View>;
 
   if (!fontsLoaded) {
     return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
-          backgroundColor: colors.white,
-        }}
-      >
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.white }}>
         <ActivityIndicator size="large" color={colors.green_primary} />
       </View>
     );
@@ -122,126 +25,12 @@ function App() {
   return (
     <SafeAreaProvider style={{ flex: 1, backgroundColor: colors.green_primary }}>
       <KeyboardProvider statusBarTranslucent preserveEdgeToEdge>
-        {/* =================================
-            STATUS BAR
-            ================================= */}
-        <StatusBar
-          barStyle="light-content"
-          backgroundColor="transparent"
-          translucent={true}
-        />
-
-        <NavigationContainer>
-          <Stack.Navigator initialRouteName="Home">
-            {/* LOGIN */}
-            <Stack.Screen
-              name="Login"
-              component={LoginScreen}
-              options={({ navigation }) => ({
-                header: () => (
-                  <CustomHeader navigation={navigation} showBackButton={true} />
-                ),
-              })}
-            />
-
-            {/* ALTERAR SENHA */}
-            <Stack.Screen
-              name="AlterarSenha"
-              component={AlterarSenhaScreen}
-              options={({ navigation }) => ({
-                header: () => <CustomHeader navigation={navigation} />,
-              })}
-            />
-
-            {/* CADASTRO */}
-            <Stack.Screen
-              name="Cadastro"
-              component={CadastroScreen}
-              options={({ navigation }) => ({
-                header: () => <CustomHeader navigation={navigation} />,
-              })}
-            />
-
-            {/* HOME */}
-            <Stack.Screen
-              name="Home"
-              component={HomeScreen}
-              options={{
-                headerShown: false,
-                statusBarTranslucent: true,
-                statusBarStyle: 'light',
-                contentStyle: { backgroundColor: colors.green_primary },
-              }}
-            />
-
-            {/* CADASTRAR ITEM */}
-            <Stack.Screen
-              name="CadastrarItem"
-              component={CadastrarItemScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-
-            {/* EDITAR ITEM */}
-            <Stack.Screen
-              name="EditarItem"
-              component={EditarItemScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-
-            {/* ITEM FULL SCREEN */}
-            <Stack.Screen
-              name="ItemFullScreen"
-              component={ItemFullScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-
-            {/* ESCOLHER IMAGEM */}
-            <Stack.Screen
-              name="EscolherImagem"
-              component={EscolherImagemScreen}
-              options={({ navigation }) => ({
-                header: () => <CustomHeader navigation={navigation} />,
-              })}
-            />
-
-            {/* ESCOLHER IMAGEM EDITAR */}
-            <Stack.Screen
-              name="EscolherImagemEditar"
-              component={EscolherImagemEditarScreen}
-              options={({ navigation }) => ({
-                header: () => <CustomHeader navigation={navigation} />,
-              })}
-            />
-
-            {/* MINHAS PUBLICAÇÕES */}
-            <Stack.Screen
-              name="MinhasPublicacoes"
-              component={MinhasPublicacoesScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-
-            {/* PERFIL */}
-            <Stack.Screen
-              name="Perfil"
-              component={PerfilScreen}
-              options={{
-                headerShown: false,
-              }}
-            />
-          </Stack.Navigator>
-        </NavigationContainer>
-        <AppAlertHost />
+        <AuthProvider>
+          <StatusBar barStyle="light-content" backgroundColor="transparent" translucent={true} />
+          <AppNavigator />
+          <AppAlertHost />
+        </AuthProvider>
       </KeyboardProvider>
     </SafeAreaProvider>
   );
 }
-
-export default App;

@@ -1,4 +1,4 @@
-package com.sistemaachadidos
+package com.company.achadidos
 
 import android.app.Application
 import android.content.res.Configuration
